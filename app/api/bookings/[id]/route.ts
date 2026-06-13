@@ -4,7 +4,7 @@ import Booking from '@/lib/models/Booking'
 import { auth } from '@/lib/auth'
 import { canCheckIn, isSuperAdmin } from '@/lib/roles'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 /**
  * GET /api/bookings/[id]
@@ -17,8 +17,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
   if (!canCheckIn(session.user.role as any)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   await connectDB()
+  const { id } = await params
 
-  const filter: Record<string, unknown> = { _id: params.id }
+  const filter: Record<string, unknown> = { _id: id }
   // Scope to hotel unless super_admin
   if (!isSuperAdmin(session.user.role as any)) {
     filter.hotelId = session.user.hotelId

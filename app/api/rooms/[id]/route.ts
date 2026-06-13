@@ -5,7 +5,7 @@ import Booking from '@/lib/models/Booking'
 import { auth } from '@/lib/auth'
 import { canManageRooms } from '@/lib/roles'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 /** PATCH /api/rooms/[id] — Edit room details or status (manager+) */
 export async function PATCH(req: NextRequest, { params }: Params) {
@@ -24,9 +24,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     await connectDB()
+    const { id } = await params
 
     const room = await Room.findOneAndUpdate(
-      { _id: params.id, hotelId: session.user.hotelId },
+      { _id: id, hotelId: session.user.hotelId },
       update,
       { new: true }
     )
@@ -53,8 +54,9 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   }
 
   await connectDB()
+  const { id } = await params
 
-  const room = await Room.findOne({ _id: params.id, hotelId: session.user.hotelId })
+  const room = await Room.findOne({ _id: id, hotelId: session.user.hotelId })
   if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
 
   if (room.status === 'occupied') {
@@ -64,6 +66,6 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     )
   }
 
-  await Room.findByIdAndDelete(params.id)
+  await Room.findByIdAndDelete(id)
   return NextResponse.json({ message: 'Room deleted' })
 }

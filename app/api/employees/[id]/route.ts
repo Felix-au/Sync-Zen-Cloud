@@ -4,7 +4,7 @@ import User from '@/lib/models/User'
 import { auth } from '@/lib/auth'
 import { canManageEmployees, canManageManagers } from '@/lib/roles'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 /**
  * PATCH /api/employees/[id]
@@ -32,8 +32,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   await connectDB()
+  const { id } = await params
 
-  const target = await User.findOne({ _id: params.id, hotelId: session.user.hotelId })
+  const target = await User.findOne({ _id: id, hotelId: session.user.hotelId })
   if (!target) return NextResponse.json({ error: 'Employee not found in this hotel' }, { status: 404 })
 
   // Cannot change the owner's role
@@ -62,8 +63,9 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   }
 
   await connectDB()
+  const { id } = await params
 
-  const target = await User.findOne({ _id: params.id, hotelId: session.user.hotelId })
+  const target = await User.findOne({ _id: id, hotelId: session.user.hotelId })
   if (!target) return NextResponse.json({ error: 'Employee not found in this hotel' }, { status: 404 })
 
   if (target.role === 'hotel_owner') {

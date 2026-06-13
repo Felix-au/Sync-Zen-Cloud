@@ -17,7 +17,7 @@ const genKey = () => {
  * Useful if the key has been shared too broadly.
  * Requires hotel_owner or higher.
  */
-export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -25,7 +25,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: 'Forbidden — owner role required' }, { status: 403 })
   }
 
-  if (!belongsToHotel(session.user.role as any, session.user.hotelId, params.id)) {
+  if (!belongsToHotel(session.user.role as any, session.user.hotelId, (await params).id)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -35,7 +35,8 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   let inviteKey = genKey()
   while (await Hotel.exists({ inviteKey })) { inviteKey = genKey() }
 
-  const hotel = await Hotel.findByIdAndUpdate(params.id, { inviteKey }, { new: true })
+  const { id } = await params
+  const hotel = await Hotel.findByIdAndUpdate(id, { inviteKey }, { new: true })
   if (!hotel) return NextResponse.json({ error: 'Hotel not found' }, { status: 404 })
 
   return NextResponse.json({ inviteKey: hotel.inviteKey })

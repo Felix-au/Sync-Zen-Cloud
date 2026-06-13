@@ -10,7 +10,7 @@ const genKey = () => {
   return `${alpha()}-${alpha()}`
 }
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 /** GET /api/hotels/[id] — Get hotel details */
 export async function GET(_req: NextRequest, { params }: Params) {
@@ -18,10 +18,11 @@ export async function GET(_req: NextRequest, { params }: Params) {
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   await connectDB()
-  const hotel = await Hotel.findById(params.id).populate('ownerId', 'name email').lean()
+  const { id } = await params
+  const hotel = await Hotel.findById(id).populate('ownerId', 'name email').lean()
   if (!hotel) return NextResponse.json({ error: 'Hotel not found' }, { status: 404 })
 
-  if (!belongsToHotel(session.user.role as any, session.user.hotelId, params.id)) {
+  if (!belongsToHotel(session.user.role as any, session.user.hotelId, id)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -36,8 +37,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (!canManageHotelSettings(session.user.role as any)) {
     return NextResponse.json({ error: 'Forbidden — owner role required' }, { status: 403 })
   }
-
-  if (!belongsToHotel(session.user.role as any, session.user.hotelId, params.id)) {
+  const { id } = await params
+  if (!belongsToHotel(session.user.role as any, session.user.hotelId, id)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -50,7 +51,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     await connectDB()
-    const hotel = await Hotel.findByIdAndUpdate(params.id, update, { new: true })
+    const hotel = await Hotel.findByIdAndUpdate(id, update, { new: true })
     if (!hotel) return NextResponse.json({ error: 'Hotel not found' }, { status: 404 })
 
     return NextResponse.json({ hotel })
@@ -69,7 +70,8 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   }
 
   await connectDB()
-  const hotel = await Hotel.findByIdAndDelete(params.id)
+  const { id } = await params
+  const hotel = await Hotel.findByIdAndDelete(id)
   if (!hotel) return NextResponse.json({ error: 'Hotel not found' }, { status: 404 })
 
   return NextResponse.json({ message: 'Hotel deleted' })

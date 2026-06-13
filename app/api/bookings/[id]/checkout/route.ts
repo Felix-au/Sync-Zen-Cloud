@@ -14,15 +14,16 @@ import { canCheckIn } from '@/lib/roles'
  *
  * Any staff member can perform a checkout (same as check-in privilege).
  */
-export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (!canCheckIn(session.user.role as any)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   await connectDB()
+  const { id } = await params
 
   const booking = await Booking.findOne({
-    _id: params.id,
+    _id: id,
     hotelId: session.user.hotelId,
     status: 'checked_in',
   })
