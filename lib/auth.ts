@@ -97,11 +97,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   secret: process.env.NEXTAUTH_SECRET,
-
-  /**
-   * Required in Auth.js v5 when not deploying to Vercel.
-   * Tells Auth.js to trust the incoming Host header (localhost, custom domain, etc.).
-   * Equivalent to setting AUTH_TRUST_HOST=true in the environment.
-   */
-  trustHost: true,
 })
