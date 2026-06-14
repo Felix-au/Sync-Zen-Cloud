@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongodb'
 import Booking from '@/lib/models/Booking'
 import '@/lib/models/User'   // register User schema for .populate('createdBy')
 import '@/lib/models/Hotel'  // register Hotel schema for .populate('hotelId')
+import '@/lib/models/Room'   // register Room schema for .populate('roomIds')
 import { auth } from '@/lib/auth'
 import { canCheckIn, isSuperAdmin } from '@/lib/roles'
 import { logActivity } from '@/lib/activityLogger'

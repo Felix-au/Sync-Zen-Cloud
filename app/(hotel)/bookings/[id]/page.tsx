@@ -324,7 +324,7 @@ export default function BookingDetailPage() {
                     <div class="section-title">General Details</div>
                     <div class="grid">
                       <div class="field"><span class="label">Check-in Time</span><span class="val">${checkinDateStr}</span></div>
-                      <div class="field"><span class="label">Check-out Date</span><span class="val">${checkoutDateStr}</span></div>
+                      <div class="field"><span class="label">Scheduled Check-out Date</span><span class="val">${checkoutDateStr}</span></div>
                       ${checkoutTimeStr ? `<div class="field"><span class="label">Actual Check-out</span><span class="val">${checkoutTimeStr}</span></div>` : ''}
                       <div class="field"><span class="label">Nights</span><span class="val">${booking.nights}</span></div>
                       <div class="field"><span class="label">Payment Mode</span><span class="val">${booking.paymentMode?.toUpperCase()}</span></div>
