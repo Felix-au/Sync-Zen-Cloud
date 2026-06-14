@@ -10,6 +10,7 @@ import mongoose, { Schema, Document, Model, models } from 'mongoose'
 
 export interface IUser extends Document {
   email: string
+  username: string
   passwordHash: string
   name: string
   role: 'super_admin' | 'hotel_owner' | 'manager' | 'staff'
@@ -30,6 +31,14 @@ const UserSchema = new Schema<IUser>(
     },
     passwordHash: { type: String, required: true },
     name: { type: String, required: true, trim: true },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
     role: {
       type: String,
       enum: ['super_admin', 'hotel_owner', 'manager', 'staff'],

@@ -38,13 +38,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
+        const identifier = (credentials.email as string).toLowerCase().trim()
+
         // Dynamic import ensures Mongoose is NEVER bundled into the Edge chunk
-        const { connectDB }   = await import('@/lib/mongodb')
+        const { connectDB }     = await import('@/lib/mongodb')
         const { default: User } = await import('@/lib/models/User')
 
         await connectDB()
 
-        const user = await User.findOne({ email: (credentials.email as string).toLowerCase() })
+        // Allow sign-in with either email address or username
+        const user = await User.findOne({
+          $or: [{ email: identifier }, { username: identifier }],
+        })
         if (!user) return null
 
         const valid = await bcrypt.compare(credentials.password as string, user.passwordHash)

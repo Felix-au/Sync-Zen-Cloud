@@ -75,16 +75,16 @@ export default function LoginPage() {
           )}
 
           <div className="input-group">
-            <label className="input-label" htmlFor="email">Email</label>
+            <label className="input-label" htmlFor="email">Email or Username</label>
             <input
               id="email"
-              type="email"
+              type="text"
               className="input"
-              placeholder="you@example.com"
+              placeholder="you@example.com or your_username"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              autoComplete="email"
+              autoComplete="username"
             />
           </div>
 
@@ -110,12 +110,9 @@ export default function LoginPage() {
 
         <div style={{ marginTop: 'var(--sp-lg)' }}>
           <div className="auth-divider">Don&apos;t have an account?</div>
-          <div style={{ display: 'flex', gap: 'var(--sp-sm)', marginTop: 'var(--sp-md)' }}>
+          <div style={{ marginTop: 'var(--sp-md)' }}>
             <Link href="/register" className="btn btn-ghost w-full" style={{ justifyContent: 'center' }}>
               Register
-            </Link>
-            <Link href="/join" className="btn btn-ghost w-full" style={{ justifyContent: 'center' }}>
-              Join with Key
             </Link>
           </div>
         </div>

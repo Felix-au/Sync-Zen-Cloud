@@ -7,7 +7,7 @@ import Link from 'next/link'
 
 export default function RegisterPage() {
   const router = useRouter()
-  const [form, setForm]     = useState({ name: '', email: '', password: '', confirm: '' })
+  const [form, setForm] = useState({ name: '', username: '', email: '', password: '', confirm: '' })
   const [error, setError]   = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -34,7 +34,7 @@ export default function RegisterPage() {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: form.name, email: form.email, password: form.password }),
+      body: JSON.stringify({ name: form.name, username: form.username, email: form.email, password: form.password }),
     })
 
     const data = await res.json()
@@ -88,6 +88,17 @@ export default function RegisterPage() {
             <label className="input-label" htmlFor="name">Full name</label>
             <input id="name" type="text" className="input" placeholder="Jane Smith"
               value={form.name} onChange={e => update('name', e.target.value)} required />
+          </div>
+
+          <div className="input-group">
+            <label className="input-label" htmlFor="username">Username</label>
+            <input id="username" type="text" className="input" placeholder="jane_smith"
+              value={form.username} onChange={e => update('username', e.target.value)}
+              required autoComplete="username"
+              pattern="[a-zA-Z0-9_]{3,20}" title="3–20 characters: letters, numbers, underscores" />
+            <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-mute)', marginTop: 2 }}>
+              Used to sign in — letters, numbers and underscores only
+            </span>
           </div>
 
           <div className="input-group">
