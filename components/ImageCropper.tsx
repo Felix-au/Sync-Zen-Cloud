@@ -37,17 +37,18 @@ export function ImageCropper({ imageSrc, aspectRatio, onCrop, onCancel }: ImageC
     const height = img.height
     setRenderedSize({ width, height })
 
-    let initialW = width * 0.8
-    let initialH = height * 0.8
+    let initialX = 0
+    let initialY = 0
+    let initialW = width
+    let initialH = height
 
     if (aspectRatio) {
-      const size = Math.min(initialW, initialH)
+      const size = Math.min(width, height)
       initialW = size
       initialH = size
+      initialX = (width - size) / 2
+      initialY = (height - size) / 2
     }
-
-    const initialX = (width - initialW) / 2
-    const initialY = (height - initialH) / 2
 
     setCrop({
       x: initialX,
@@ -235,11 +236,11 @@ export function ImageCropper({ imageSrc, aspectRatio, onCrop, onCancel }: ImageC
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9999,
+        zIndex: 99999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgba(15, 23, 42, 0.85)',
+        background: 'var(--overlay)',
         backdropFilter: 'blur(8px)',
         padding: '20px',
       }}
@@ -248,10 +249,10 @@ export function ImageCropper({ imageSrc, aspectRatio, onCrop, onCancel }: ImageC
         style={{
           width: '100%',
           maxWidth: '650px',
-          background: 'var(--card-bg, #1e293b)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '16px',
-          boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5)',
+          background: 'var(--surface)',
+          border: '1px solid var(--border-hi)',
+          borderRadius: 'var(--r-lg, 16px)',
+          boxShadow: 'var(--shadow-lg)',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
@@ -262,20 +263,20 @@ export function ImageCropper({ imageSrc, aspectRatio, onCrop, onCancel }: ImageC
         <div
           style={{
             padding: '16px 24px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            borderBottom: '1px solid var(--border)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
           }}
         >
-          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#f8fafc' }}>
+          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-pri)' }}>
             Crop Photo
           </h3>
           <span
             style={{
               fontSize: '12px',
-              color: 'var(--text-mute, #94a3b8)',
-              background: 'rgba(255,255,255,0.06)',
+              color: 'var(--text-sec)',
+              background: 'var(--bg-alt)',
               padding: '4px 10px',
               borderRadius: '20px',
               fontWeight: 600,
@@ -292,7 +293,7 @@ export function ImageCropper({ imageSrc, aspectRatio, onCrop, onCancel }: ImageC
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#0f172a',
+            background: 'var(--bg-alt)',
             overflow: 'auto',
             flex: 1,
             minHeight: '280px',
@@ -341,7 +342,7 @@ export function ImageCropper({ imageSrc, aspectRatio, onCrop, onCancel }: ImageC
                     left: crop.x,
                     width: crop.w,
                     height: crop.h,
-                    border: '2px dashed #3b82f6',
+                    border: '2px dashed var(--accent, #3b82f6)',
                     cursor: 'move',
                     pointerEvents: 'auto',
                     boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',
@@ -402,7 +403,7 @@ export function ImageCropper({ imageSrc, aspectRatio, onCrop, onCancel }: ImageC
                       left: -6,
                       width: 14,
                       height: 14,
-                      backgroundColor: '#3b82f6',
+                      backgroundColor: 'var(--accent, #3b82f6)',
                       border: '2px solid #ffffff',
                       borderRadius: '50%',
                       cursor: 'nwse-resize',
@@ -420,7 +421,7 @@ export function ImageCropper({ imageSrc, aspectRatio, onCrop, onCancel }: ImageC
                       right: -6,
                       width: 14,
                       height: 14,
-                      backgroundColor: '#3b82f6',
+                      backgroundColor: 'var(--accent, #3b82f6)',
                       border: '2px solid #ffffff',
                       borderRadius: '50%',
                       cursor: 'nesw-resize',
@@ -438,7 +439,7 @@ export function ImageCropper({ imageSrc, aspectRatio, onCrop, onCancel }: ImageC
                       left: -6,
                       width: 14,
                       height: 14,
-                      backgroundColor: '#3b82f6',
+                      backgroundColor: 'var(--accent, #3b82f6)',
                       border: '2px solid #ffffff',
                       borderRadius: '50%',
                       cursor: 'nesw-resize',
@@ -456,7 +457,7 @@ export function ImageCropper({ imageSrc, aspectRatio, onCrop, onCancel }: ImageC
                       right: -6,
                       width: 14,
                       height: 14,
-                      backgroundColor: '#3b82f6',
+                      backgroundColor: 'var(--accent, #3b82f6)',
                       border: '2px solid #ffffff',
                       borderRadius: '50%',
                       cursor: 'nwse-resize',
@@ -473,7 +474,7 @@ export function ImageCropper({ imageSrc, aspectRatio, onCrop, onCancel }: ImageC
         <div
           style={{
             padding: '16px 24px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            borderTop: '1px solid var(--border)',
             display: 'flex',
             justifyContent: 'flex-end',
             gap: '12px',
