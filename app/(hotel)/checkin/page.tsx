@@ -14,10 +14,10 @@ interface Guest {
 
 /* ── Wizard Steps ────────────────────────────────────────────── */
 const STEPS = [
-  { id: 'guests',   label: 'Guest Details' },
-  { id: 'idproof',  label: 'ID Proof' },
-  { id: 'rooms',    label: 'Select Room' },
-  { id: 'confirm',  label: 'Confirm' },
+  { id: 'guests', label: 'Guest Details' },
+  { id: 'idproof', label: 'ID Proof' },
+  { id: 'rooms', label: 'Select Room' },
+  { id: 'confirm', label: 'Confirm' },
 ]
 
 const EMPTY_GUEST = (): Guest => ({ name: '', phone: '', age: '', sex: '', photoDataUri: undefined, photoFilename: undefined })
@@ -51,13 +51,13 @@ export default function CheckInPage() {
   const [paymentMode, setPaymentMode] = useState('cash')
 
   // Step 3 — ID proof
-  const [idProofDataUri, setIdProofDataUri]     = useState<string | undefined>()
-  const [idProofFilename, setIdProofFilename]   = useState<string | undefined>()
+  const [idProofDataUri, setIdProofDataUri] = useState<string | undefined>()
+  const [idProofFilename, setIdProofFilename] = useState<string | undefined>()
 
   // Submission state
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError]           = useState('')
-  const [success, setSuccess]       = useState<{ ref: string } | null>(null)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState<{ ref: string } | null>(null)
   const [loadingRooms, setLoadingRooms] = useState(true)
 
   // Load available rooms on mount
@@ -221,7 +221,7 @@ export default function CheckInPage() {
   }
 
   const selectedRooms = availableRooms.filter(r => selectedRoomIds.includes(r._id))
-  const totalPrice    = selectedRooms.reduce((sum, r) => sum + r.pricePerNight * nights, 0)
+  const totalPrice = selectedRooms.reduce((sum, r) => sum + r.pricePerNight * nights, 0)
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -242,9 +242,10 @@ export default function CheckInPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-lg)' }}>
-              {/* Stay details */}
+              {/* Stay & Guest Details */}
               <div className="glass-card" style={{ padding: 'var(--sp-lg)' }}>
-                <h3 style={{ fontWeight: 700, marginBottom: 'var(--sp-md)', color: 'var(--text-pri)' }}>Stay Details</h3>
+                <h3 style={{ fontWeight: 700, marginBottom: 'var(--sp-md)', color: 'var(--text-pri)' }}>Stay & Guest Details</h3>
+                
                 <div className="grid-2">
                   <div className="input-group">
                     <label className="input-label" htmlFor="checkout">Check-out Date *</label>
@@ -264,17 +265,8 @@ export default function CheckInPage() {
                     </div>
                   </div>
                 </div>
-                <div className="input-group mt-md">
-                  <label className="input-label" htmlFor="notes">Notes (optional)</label>
-                  <textarea id="notes" className="input" rows={2} placeholder="Special requests, notes…" value={notes} onChange={e => setNotes(e.target.value)} />
-                </div>
-              </div>
 
-              {/* Stay Profile & Guests */}
-              <div className="glass-card" style={{ padding: 'var(--sp-lg)' }}>
-                <h3 style={{ fontWeight: 700, marginBottom: 'var(--sp-md)', color: 'var(--text-pri)' }}>Stay Profile & Guests</h3>
-                
-                <div className="grid-2">
+                <div className="grid-2 mt-md" style={{ marginTop: 'var(--sp-md)' }}>
                   {/* Nationality */}
                   <div className="input-group">
                     <label className="input-label" htmlFor="nationality">Nationality *</label>
@@ -325,7 +317,7 @@ export default function CheckInPage() {
 
                 {/* Address */}
                 <div className="input-group mt-md">
-                  <label className="input-label" htmlFor="address">Address (optional)</label>
+                  <label className="input-label" htmlFor="address">Address</label>
                   <textarea
                     id="address"
                     className="input"
@@ -496,32 +488,32 @@ export default function CheckInPage() {
             </div>
 
             {loadingRooms ? <div className="flex justify-center" style={{ padding: 'var(--sp-3xl)' }}><span className="spinner spinner-lg" /></div>
-            : availableRooms.length === 0 ? (
-              <div className="glass-card empty-state">
-                <span className="empty-icon">🏠</span>
-                <div className="empty-title">No rooms available</div>
-                <div className="empty-text">All rooms are currently occupied or under maintenance.</div>
-              </div>
-            ) : (
-              <div className="room-grid">
-                {availableRooms.map(room => (
-                  <div
-                    key={room._id}
-                    className={`glass-card room-card ${selectedRoomIds.includes(room._id) ? 'selected' : ''}`}
-                    onClick={() => setSelectedRoomIds(ids =>
-                      ids.includes(room._id) ? ids.filter(id => id !== room._id) : [...ids, room._id]
-                    )}
-                  >
-                    <div className="room-number">{room.roomNumber}</div>
-                    <div className="room-type">Floor {room.floor} · {room.roomType}</div>
-                    {room.pricePerNight > 0 && <div className="room-price">₹{room.pricePerNight.toLocaleString()}/night</div>}
-                    {selectedRoomIds.includes(room._id) && (
-                      <div style={{ position: 'absolute', top: 10, right: 10, color: 'var(--accent)', fontSize: 20 }}>✓</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+              : availableRooms.length === 0 ? (
+                <div className="glass-card empty-state">
+                  <span className="empty-icon">🏠</span>
+                  <div className="empty-title">No rooms available</div>
+                  <div className="empty-text">All rooms are currently occupied or under maintenance.</div>
+                </div>
+              ) : (
+                <div className="room-grid">
+                  {availableRooms.map(room => (
+                    <div
+                      key={room._id}
+                      className={`glass-card room-card ${selectedRoomIds.includes(room._id) ? 'selected' : ''}`}
+                      onClick={() => setSelectedRoomIds(ids =>
+                        ids.includes(room._id) ? ids.filter(id => id !== room._id) : [...ids, room._id]
+                      )}
+                    >
+                      <div className="room-number">{room.roomNumber}</div>
+                      <div className="room-type">Floor {room.floor} · {room.roomType}</div>
+                      {room.pricePerNight > 0 && <div className="room-price">₹{room.pricePerNight.toLocaleString()}/night</div>}
+                      {selectedRoomIds.includes(room._id) && (
+                        <div style={{ position: 'absolute', top: 10, right: 10, color: 'var(--accent)', fontSize: 20 }}>✓</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
             {/* Payment details — shown once rooms are selected */}
             {selectedRoomIds.length > 0 && (
@@ -697,7 +689,7 @@ export default function CheckInPage() {
               onClick={goNext}
               disabled={
                 (step === 'guests' && !step1Valid) ||
-                (step === 'rooms'  && !step3Valid)
+                (step === 'rooms' && !step3Valid)
               }
             >
               Continue →
