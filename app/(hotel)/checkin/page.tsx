@@ -362,6 +362,48 @@ export default function CheckInPage() {
                 ))}
               </div>
             )}
+
+            {/* Custom charge — shown once rooms are selected */}
+            {selectedRoomIds.length > 0 && (
+              <div className="glass-card" style={{ padding: 'var(--sp-lg)', marginTop: 'var(--sp-md)' }}>
+                <div className="input-group" style={{ marginBottom: 0 }}>
+                  <label className="input-label" htmlFor="custom-charge">
+                    Charge per night
+                    <span style={{ fontWeight: 400, color: 'var(--text-mute)', marginLeft: 6 }}>(optional — overrides room rate)</span>
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 'var(--fs-md)', color: 'var(--text-sec)', flexShrink: 0 }}>₹</span>
+                    <input
+                      id="custom-charge"
+                      className="input"
+                      type="number"
+                      min="0"
+                      step="50"
+                      placeholder={selectedRooms.reduce((s, r) => s + (r.pricePerNight ?? 0), 0) > 0
+                        ? selectedRooms.reduce((s, r) => s + (r.pricePerNight ?? 0), 0).toString()
+                        : 'Enter amount'}
+                      value={customChargePerNight}
+                      onChange={e => setCustomChargePerNight(e.target.value)}
+                    />
+                    <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-mute)', flexShrink: 0 }}>/night</span>
+                    {customChargePerNight && (
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setCustomChargePerNight('')}
+                        title="Reset to room rate"
+                        style={{ flexShrink: 0 }}
+                      >✕</button>
+                    )}
+                  </div>
+                  {customChargePerNight && nights > 0 && (
+                    <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--accent)', marginTop: 4, display: 'block' }}>
+                      Total: ₹{(Number(customChargePerNight) * nights).toLocaleString()} for {nights} night{nights !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

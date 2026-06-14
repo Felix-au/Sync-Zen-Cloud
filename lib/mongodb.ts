@@ -76,10 +76,18 @@ export async function connectDB(): Promise<typeof mongoose> {
   if (cached.conn) return cached.conn
 
   if (!cached.promise) {
+    // Resolve the URI first, then store the connection promise atomically.
+    // Without this, two concurrent requests both see cached.promise===null,
+    // both call resolveMongoUri() which may return different resolved strings,
+    // and both attempt mongoose.connect() → "Can't call openUri() on active connection".
     const uri = await resolveMongoUri(MONGODB_URI)
-    cached.promise = mongoose.connect(uri, {
-      bufferCommands: false,
-    })
+
+    // Check again after await — another request may have set cached.promise
+    if (!cached.promise) {
+      cached.promise = mongoose.connect(uri, {
+        bufferCommands: false,
+      })
+    }
   }
 
   cached.conn = await cached.promise

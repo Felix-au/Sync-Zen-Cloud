@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model, models } from 'mongoose'
+import './User' // register User schema so .populate('createdBy') can resolve it
 
 /**
  * Booking model — represents a completed hotel check-in.
