@@ -1487,6 +1487,10 @@ tbody tr:last-child td {
     gap: var(--sp-sm) !important;
   }
 
+  .guest-counts-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
   /* ── Employees table → card layout on mobile ─────────────── */
   .emp-table thead {
     display: none;

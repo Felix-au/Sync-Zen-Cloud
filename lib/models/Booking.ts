@@ -32,6 +32,8 @@ export interface IBooking extends Document {
   guests: IGuest[]
   idProofFileId?: string
   idProofUrl?: string
+  idProofFileIds?: string[]
+  idProofUrls?: string[]
   notes?: string
   nights: number
   /** Custom per-night charge set at check-in time. Overrides room's pricePerNight. */
@@ -77,6 +79,8 @@ const BookingSchema = new Schema<IBooking>(
     guests: { type: [GuestSchema], required: true, validate: [(v: IGuest[]) => v.length > 0, 'At least one guest required'] },
     idProofFileId: { type: String },
     idProofUrl: { type: String },
+    idProofFileIds: { type: [String], default: [] },
+    idProofUrls: { type: [String], default: [] },
     notes: { type: String, trim: true },
     nights: { type: Number, required: true, min: 1 },
     customChargePerNight: { type: Number, min: 0 },

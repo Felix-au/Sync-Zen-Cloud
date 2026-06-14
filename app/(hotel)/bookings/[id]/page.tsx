@@ -32,6 +32,8 @@ interface Booking {
   customChargePerNight?: number
   notes?: string
   idProofUrl?: string
+  idProofFileIds?: string[]
+  idProofUrls?: string[]
   createdBy: { name: string; email: string }
   hotelId: string
   address?: string
@@ -185,24 +187,42 @@ export default function BookingDetailPage() {
           </div>
 
           {/* ID Proof */}
-          {booking.idProofUrl && (
+          {((booking.idProofUrls && booking.idProofUrls.length > 0) || booking.idProofUrl) && (
             <div className="glass-card">
               <div style={{ padding: 'var(--sp-md) var(--sp-lg)', borderBottom: '1px solid var(--border)' }}>
-                <h2 style={{ fontWeight: 800, fontSize: 'var(--fs-md)', color: 'var(--text-pri)' }}>ID Proof</h2>
+                <h2 style={{ fontWeight: 800, fontSize: 'var(--fs-md)', color: 'var(--text-pri)' }}>ID Proof Document(s)</h2>
               </div>
-              <div style={{ padding: 'var(--sp-md)' }}>
-                <img
-                  src={booking.idProofUrl}
-                  alt="ID proof"
-                  style={{
-                    width: '100%',
-                    borderRadius: 'var(--r-md)',
-                    border: '1px solid var(--border)',
-                    maxHeight: 280,
-                    objectFit: 'contain',
-                    background: 'var(--elevated)',
-                  }}
-                />
+              <div style={{ padding: 'var(--sp-md)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {booking.idProofUrls && booking.idProofUrls.length > 0 ? (
+                  booking.idProofUrls.map((url: string, idx: number) => (
+                    <img
+                      key={idx}
+                      src={url}
+                      alt={`ID proof ${idx + 1}`}
+                      style={{
+                        width: '100%',
+                        borderRadius: 'var(--r-md)',
+                        border: '1px solid var(--border)',
+                        maxHeight: 280,
+                        objectFit: 'contain',
+                        background: 'var(--elevated)',
+                      }}
+                    />
+                  ))
+                ) : (
+                  <img
+                    src={booking.idProofUrl}
+                    alt="ID proof"
+                    style={{
+                      width: '100%',
+                      borderRadius: 'var(--r-md)',
+                      border: '1px solid var(--border)',
+                      maxHeight: 280,
+                      objectFit: 'contain',
+                      background: 'var(--elevated)',
+                    }}
+                  />
+                )}
               </div>
             </div>
           )}

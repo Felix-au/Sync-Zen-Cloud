@@ -51,8 +51,7 @@ export default function CheckInPage() {
   const [paymentMode, setPaymentMode] = useState('cash')
 
   // Step 3 — ID proof
-  const [idProofDataUri, setIdProofDataUri] = useState<string | undefined>()
-  const [idProofFilename, setIdProofFilename] = useState<string | undefined>()
+  const [idProofs, setIdProofs] = useState<Array<{ dataUri: string; filename: string }>>([])
 
   // Submission state
   const [submitting, setSubmitting] = useState(false)
@@ -131,14 +130,19 @@ export default function CheckInPage() {
         return g
       }))
 
-      // Upload ID proof if provided
-      let idProofFileId: string | undefined
-      let idProofUrl: string | undefined
-      if (idProofDataUri && idProofFilename) {
-        const folder = `checkin/${Date.now()}`
-        const res = await uploadPhoto(idProofDataUri, idProofFilename, folder)
-        idProofFileId = res.fileId
-        idProofUrl = res.url
+      // Upload ID proofs if provided
+      let idProofFileIds: string[] = []
+      let idProofUrls: string[] = []
+      if (idProofs.length > 0) {
+        const results = await Promise.all(
+          idProofs.map(async (proof, idx) => {
+            const folder = `checkin/${Date.now()}_id_${idx}`
+            const res = await uploadPhoto(proof.dataUri, proof.filename, folder)
+            return res
+          })
+        )
+        idProofFileIds = results.map(r => r.fileId)
+        idProofUrls = results.map(r => r.url)
       }
 
       // Create booking
@@ -158,8 +162,10 @@ export default function CheckInPage() {
           roomIds: selectedRoomIds,
           checkOutDate,
           nights,
-          idProofFileId,
-          idProofUrl,
+          idProofFileId: idProofFileIds[0] || undefined,
+          idProofUrl: idProofUrls[0] || undefined,
+          idProofFileIds,
+          idProofUrls,
           notes: notes.trim() || undefined,
           customChargePerNight: customChargePerNight ? Number(customChargePerNight) : undefined,
           address: address.trim() || undefined,
@@ -211,6 +217,7 @@ export default function CheckInPage() {
               setChildGuestsCount('0');
               setPurposeOfTravel('');
               setPaymentMode('cash');
+              setIdProofs([]);
             }}>
               ✚ New Check-In
             </button>
@@ -343,7 +350,7 @@ export default function CheckInPage() {
                   />
                 </div>
 
-                <div className="grid-3 mt-md" style={{ marginTop: 'var(--sp-md)' }}>
+                <div className="grid-3 mt-md guest-counts-grid" style={{ marginTop: 'var(--sp-md)' }}>
                   <div className="input-group">
                     <label className="input-label" htmlFor="male-guests">Male</label>
                     <input
@@ -462,20 +469,35 @@ export default function CheckInPage() {
         {step === 'idproof' && (
           <div className="fade-in">
             <div className="page-header">
-              <h1 className="page-title">ID Proof</h1>
-              <p className="page-subtitle">Upload a group ID document (passport, Aadhaar, driving licence). Optional.</p>
+              <h1 className="page-title">ID Proof Documents</h1>
+              <p className="page-subtitle">Upload group ID document(s) (passport, Aadhaar, driving licence). Front & back can be uploaded. Optional.</p>
             </div>
-            <div className="glass-card" style={{ padding: 'var(--sp-xl)' }}>
-              <PhotoUpload
-                label="Group ID Document"
-                previewUrl={idProofDataUri}
-                onChange={(uri, name) => { setIdProofDataUri(uri); setIdProofFilename(name) }}
-              />
-              {idProofDataUri && (
-                <button className="btn btn-ghost btn-sm mt-md" onClick={() => { setIdProofDataUri(undefined); setIdProofFilename(undefined) }}>
-                  ✕ Remove
-                </button>
+            <div className="glass-card" style={{ padding: 'var(--sp-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-md)' }}>
+              
+              {idProofs.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 'var(--sp-md)' }}>
+                  {idProofs.map((proof, idx) => (
+                    <div key={idx} className="glass-card" style={{ padding: 'var(--sp-sm)', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <img src={proof.dataUri} alt={`ID Preview ${idx + 1}`} style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 'var(--r-sm)' }} />
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        style={{ marginTop: 8, width: '100%' }}
+                        onClick={() => setIdProofs(prev => prev.filter((_, i) => i !== idx))}
+                      >
+                        ✕ Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
               )}
+
+              <PhotoUpload
+                label={idProofs.length > 0 ? "Add Another ID Document" : "Group ID Document"}
+                onChange={(uri, name) => {
+                  setIdProofs(prev => [...prev, { dataUri: uri, filename: name }])
+                }}
+              />
             </div>
           </div>
         )}
@@ -661,10 +683,14 @@ export default function CheckInPage() {
               </div>
 
               {/* ID proof */}
-              {idProofDataUri && (
+              {idProofs && idProofs.length > 0 && (
                 <div className="glass-card" style={{ padding: 'var(--sp-lg)' }}>
-                  <h3 style={{ fontWeight: 800, color: 'var(--text-mute)', fontSize: 'var(--fs-xs)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 'var(--sp-md)' }}>ID Proof</h3>
-                  <img src={idProofDataUri} alt="ID proof" style={{ maxHeight: 180, borderRadius: 8, objectFit: 'cover' }} />
+                  <h3 style={{ fontWeight: 800, color: 'var(--text-mute)', fontSize: 'var(--fs-xs)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 'var(--sp-md)' }}>ID Proof Document(s)</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 }}>
+                    {idProofs.map((proof, idx) => (
+                      <img key={idx} src={proof.dataUri} alt={`ID proof preview ${idx + 1}`} style={{ width: '100%', maxHeight: 120, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border)' }} />
+                    ))}
+                  </div>
                 </div>
               )}
 
