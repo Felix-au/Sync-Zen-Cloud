@@ -70,7 +70,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: 'Cannot update check-out date for completed or cancelled bookings' }, { status: 400 })
     }
 
-    // Validate checkout date is after check-in date
+    // Validate checkout date is not before check-in date
     const checkIn = new Date(booking.checkInTime)
     const checkOut = new Date(checkOutDate)
     if (isNaN(checkOut.getTime())) {
@@ -80,8 +80,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const checkInDateOnly = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate())
     const checkOutDateOnly = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate())
 
-    if (checkOutDateOnly <= checkInDateOnly) {
-      return NextResponse.json({ error: 'Check-out date must be after check-in date' }, { status: 400 })
+    if (checkOutDateOnly < checkInDateOnly) {
+      return NextResponse.json({ error: 'Check-out date cannot be before check-in date' }, { status: 400 })
     }
 
     // Calculate nights

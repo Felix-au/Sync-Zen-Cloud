@@ -261,7 +261,7 @@ export default function CheckInPage() {
                       type="date"
                       className="input"
                       value={checkOutDate}
-                      min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+                      min={new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}
                       onChange={e => setCheckOutDate(e.target.value)}
                     />
                   </div>
