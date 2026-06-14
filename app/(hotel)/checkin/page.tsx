@@ -39,6 +39,17 @@ export default function CheckInPage() {
   const [nights, setNights] = useState(1)
   const [notes, setNotes] = useState('')
 
+  // Stay profile additions
+  const [address, setAddress] = useState('')
+  const [nationalityType, setNationalityType] = useState('India')
+  const [nationalityCustom, setNationalityCustom] = useState('')
+  const [totalGuestsCount, setTotalGuestsCount] = useState('1')
+  const [maleGuestsCount, setMaleGuestsCount] = useState('1')
+  const [femaleGuestsCount, setFemaleGuestsCount] = useState('0')
+  const [childGuestsCount, setChildGuestsCount] = useState('0')
+  const [purposeOfTravel, setPurposeOfTravel] = useState('')
+  const [paymentMode, setPaymentMode] = useState('cash')
+
   // Step 3 — ID proof
   const [idProofDataUri, setIdProofDataUri]     = useState<string | undefined>()
   const [idProofFilename, setIdProofFilename]   = useState<string | undefined>()
@@ -101,7 +112,8 @@ export default function CheckInPage() {
   const step3Valid = selectedRoomIds.length > 0
 
   /* ── Validate step 1 (guests) ────────────────────────────────── */
-  const step1Valid = guests[0]?.name.trim() && checkOutDate
+  const isGuestCountValid = Number(maleGuestsCount || 0) + Number(femaleGuestsCount || 0) + Number(childGuestsCount || 0) === Number(totalGuestsCount || 0)
+  const step1Valid = guests[0]?.name.trim() && checkOutDate && isGuestCountValid
 
   /* ── Submit check-in ─────────────────────────────────────────── */
   async function handleSubmit() {
@@ -150,6 +162,14 @@ export default function CheckInPage() {
           idProofUrl,
           notes: notes.trim() || undefined,
           customChargePerNight: customChargePerNight ? Number(customChargePerNight) : undefined,
+          address: address.trim() || undefined,
+          nationality: nationalityType === 'Other' ? nationalityCustom.trim() : nationalityType,
+          totalGuests: Number(totalGuestsCount),
+          maleGuestsCount: Number(maleGuestsCount),
+          femaleGuestsCount: Number(femaleGuestsCount),
+          childGuestsCount: Number(childGuestsCount),
+          purposeOfTravel: purposeOfTravel || undefined,
+          paymentMode,
         }),
       })
 
@@ -176,7 +196,22 @@ export default function CheckInPage() {
           </div>
           <div className="flex gap-md justify-center">
             <button className="btn btn-ghost" onClick={() => router.push('/bookings')}>View Bookings</button>
-            <button className="btn btn-primary" onClick={() => { setSuccess(null); setStep('guests'); setSelectedRoomIds([]); setGuests([EMPTY_GUEST()]); setCheckOutDate(''); }}>
+            <button className="btn btn-primary" onClick={() => {
+              setSuccess(null);
+              setStep('guests');
+              setSelectedRoomIds([]);
+              setGuests([EMPTY_GUEST()]);
+              setCheckOutDate('');
+              setAddress('');
+              setNationalityType('India');
+              setNationalityCustom('');
+              setTotalGuestsCount('1');
+              setMaleGuestsCount('1');
+              setFemaleGuestsCount('0');
+              setChildGuestsCount('0');
+              setPurposeOfTravel('');
+              setPaymentMode('cash');
+            }}>
               ✚ New Check-In
             </button>
           </div>
@@ -233,6 +268,131 @@ export default function CheckInPage() {
                   <label className="input-label" htmlFor="notes">Notes (optional)</label>
                   <textarea id="notes" className="input" rows={2} placeholder="Special requests, notes…" value={notes} onChange={e => setNotes(e.target.value)} />
                 </div>
+              </div>
+
+              {/* Stay Profile & Guests */}
+              <div className="glass-card" style={{ padding: 'var(--sp-lg)' }}>
+                <h3 style={{ fontWeight: 700, marginBottom: 'var(--sp-md)', color: 'var(--text-pri)' }}>Stay Profile & Guests</h3>
+                
+                <div className="grid-2">
+                  {/* Nationality */}
+                  <div className="input-group">
+                    <label className="input-label" htmlFor="nationality">Nationality *</label>
+                    <select
+                      id="nationality"
+                      className="input"
+                      value={nationalityType}
+                      onChange={e => setNationalityType(e.target.value)}
+                    >
+                      <option value="India">India</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  {/* Purpose of Travel */}
+                  <div className="input-group">
+                    <label className="input-label" htmlFor="purpose">Purpose of Travel</label>
+                    <select
+                      id="purpose"
+                      className="input"
+                      value={purposeOfTravel}
+                      onChange={e => setPurposeOfTravel(e.target.value)}
+                    >
+                      <option value="">Select option</option>
+                      <option value="Leisure">Leisure</option>
+                      <option value="Business">Business</option>
+                      <option value="Personal">Personal</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Conditional Custom Nationality */}
+                {nationalityType === 'Other' && (
+                  <div className="input-group mt-md fade-in">
+                    <label className="input-label" htmlFor="nationality-custom">Specify Country *</label>
+                    <input
+                      id="nationality-custom"
+                      type="text"
+                      className="input"
+                      placeholder="Enter nationality / country"
+                      value={nationalityCustom}
+                      onChange={e => setNationalityCustom(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Address */}
+                <div className="input-group mt-md">
+                  <label className="input-label" htmlFor="address">Address (optional)</label>
+                  <textarea
+                    id="address"
+                    className="input"
+                    rows={2}
+                    placeholder="Enter guest's permanent address…"
+                    value={address}
+                    onChange={e => setAddress(e.target.value)}
+                  />
+                </div>
+
+                <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 'var(--sp-md) 0' }} />
+
+                {/* Guests breakdown */}
+                <div className="input-group">
+                  <label className="input-label" htmlFor="total-guests">Total Guests *</label>
+                  <input
+                    id="total-guests"
+                    type="number"
+                    min="1"
+                    className="input"
+                    value={totalGuestsCount}
+                    onChange={e => setTotalGuestsCount(e.target.value)}
+                  />
+                </div>
+
+                <div className="grid-3 mt-md" style={{ marginTop: 'var(--sp-md)' }}>
+                  <div className="input-group">
+                    <label className="input-label" htmlFor="male-guests">Male</label>
+                    <input
+                      id="male-guests"
+                      type="number"
+                      min="0"
+                      className="input"
+                      value={maleGuestsCount}
+                      onChange={e => setMaleGuestsCount(e.target.value)}
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label" htmlFor="female-guests">Female</label>
+                    <input
+                      id="female-guests"
+                      type="number"
+                      min="0"
+                      className="input"
+                      value={femaleGuestsCount}
+                      onChange={e => setFemaleGuestsCount(e.target.value)}
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label" htmlFor="child-guests">Child</label>
+                    <input
+                      id="child-guests"
+                      type="number"
+                      min="0"
+                      className="input"
+                      value={childGuestsCount}
+                      onChange={e => setChildGuestsCount(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Live validation warning */}
+                {!isGuestCountValid && (
+                  <div style={{ marginTop: 'var(--sp-md)', padding: 'var(--sp-sm) var(--sp-md)', background: 'var(--amber-dim)', border: '1px solid rgba(217, 119, 6, 0.25)', borderRadius: 'var(--r-md)', fontSize: 'var(--fs-xs)', color: 'var(--amber)', fontWeight: 600 }}>
+                    ⚠️ Guest counts breakdown (Male: {maleGuestsCount} + Female: {femaleGuestsCount} + Child: {childGuestsCount} = {Number(maleGuestsCount || 0) + Number(femaleGuestsCount || 0) + Number(childGuestsCount || 0)}) must equal Total Guests ({totalGuestsCount}).
+                  </div>
+                )}
               </div>
 
               {/* Guest cards */}
@@ -363,10 +523,10 @@ export default function CheckInPage() {
               </div>
             )}
 
-            {/* Custom charge — shown once rooms are selected */}
+            {/* Payment details — shown once rooms are selected */}
             {selectedRoomIds.length > 0 && (
-              <div className="glass-card" style={{ padding: 'var(--sp-lg)', marginTop: 'var(--sp-md)' }}>
-                <div className="input-group" style={{ marginBottom: 0 }}>
+              <div className="glass-card" style={{ padding: 'var(--sp-lg)', marginTop: 'var(--sp-md)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-md)' }}>
+                <div className="input-group">
                   <label className="input-label" htmlFor="custom-charge">
                     Charge per night
                     <span style={{ fontWeight: 400, color: 'var(--text-mute)', marginLeft: 6 }}>(optional — overrides room rate)</span>
@@ -402,6 +562,28 @@ export default function CheckInPage() {
                     </span>
                   )}
                 </div>
+
+                <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }} />
+
+                <div className="input-group">
+                  <label className="input-label">Mode of Payment</label>
+                  <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+                    {[
+                      { value: 'cash', label: '💵 Cash' },
+                      { value: 'online', label: '💳 Online' }
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`btn ${paymentMode === opt.value ? 'btn-primary' : 'btn-ghost'}`}
+                        style={{ flex: 1, paddingBlock: 12 }}
+                        onClick={() => setPaymentMode(opt.value)}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -416,9 +598,9 @@ export default function CheckInPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-lg)' }}>
-              {/* Rooms summary */}
+              {/* Stay & Rooms summary */}
               <div className="glass-card" style={{ padding: 'var(--sp-lg)' }}>
-                <h3 style={{ fontWeight: 800, color: 'var(--text-mute)', fontSize: 'var(--fs-xs)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 'var(--sp-md)' }}>Rooms</h3>
+                <h3 style={{ fontWeight: 800, color: 'var(--text-mute)', fontSize: 'var(--fs-xs)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 'var(--sp-md)' }}>Stay & Rooms</h3>
                 <div className="flex gap-sm flex-wrap">
                   {selectedRooms.map(r => (
                     <div key={r._id} className="glass-card" style={{ padding: '10px 14px', display: 'flex', gap: 'var(--sp-sm)', alignItems: 'center' }}>
@@ -445,13 +627,28 @@ export default function CheckInPage() {
                     ) : null
                   })()}
                 </div>
+                <div style={{ marginTop: 8, fontSize: 'var(--fs-sm)', color: 'var(--text-sec)', borderTop: '1px solid var(--border)', paddingTop: 8, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                  <div>Payment Mode: <strong style={{ textTransform: 'capitalize' }}>{paymentMode}</strong></div>
+                  {purposeOfTravel && <div>Purpose: <strong>{purposeOfTravel}</strong></div>}
+                  <div>Nationality: <strong>{nationalityType === 'Other' ? nationalityCustom : nationalityType}</strong></div>
+                </div>
               </div>
 
               {/* Guests summary */}
               <div className="glass-card" style={{ padding: 'var(--sp-lg)' }}>
-                <h3 style={{ fontWeight: 800, color: 'var(--text-mute)', fontSize: 'var(--fs-xs)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 'var(--sp-md)' }}>
-                  Guests ({guests.length})
-                </h3>
+                <div className="flex justify-between items-center mb-md" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
+                  <h3 style={{ fontWeight: 800, color: 'var(--text-mute)', fontSize: 'var(--fs-xs)', textTransform: 'uppercase', letterSpacing: 1, margin: 0 }}>
+                    Guests ({guests.length})
+                  </h3>
+                  <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-sec)', fontWeight: 600 }}>
+                    Total: {totalGuestsCount} (M: {maleGuestsCount} · F: {femaleGuestsCount} · C: {childGuestsCount})
+                  </div>
+                </div>
+                {address && (
+                  <div style={{ marginBottom: 'var(--sp-md)', fontSize: 'var(--fs-sm)', color: 'var(--text-sec)', background: 'var(--elevated)', padding: 'var(--sp-sm) var(--sp-md)', borderRadius: 'var(--r-md)' }}>
+                    <strong>Address:</strong> {address}
+                  </div>
+                )}
                 {guests.map((g, i) => (
                   <div key={i} style={{ display: 'flex', gap: 'var(--sp-md)', alignItems: 'center', padding: 'var(--sp-sm) 0', borderBottom: i < guests.length - 1 ? '1px solid var(--border)' : 'none' }}>
                     {g.photoDataUri

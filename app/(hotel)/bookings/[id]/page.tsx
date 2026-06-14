@@ -34,6 +34,14 @@ interface Booking {
   idProofUrl?: string
   createdBy: { name: string; email: string }
   hotelId: string
+  address?: string
+  nationality: string
+  totalGuests: number
+  maleGuestsCount: number
+  femaleGuestsCount: number
+  childGuestsCount: number
+  purposeOfTravel?: string
+  paymentMode: string
 }
 
 const STATUS_BADGE: Record<string, string> = {
@@ -219,6 +227,12 @@ export default function BookingDetailPage() {
                     ? `₹${booking.rooms.reduce((s, r) => s + r.pricePerNight, 0).toLocaleString()}`
                     : '—'],
                 ['Checked in by',  booking.createdBy?.name ?? '—'],
+                ['Nationality',    booking.nationality ?? 'India'],
+                ['Purpose of Travel', booking.purposeOfTravel ?? '—'],
+                ['Payment Mode',   booking.paymentMode ? booking.paymentMode.toUpperCase() : 'CASH'],
+                ['Total Guests',   booking.totalGuests ?? booking.guests.length],
+                ['Guest Breakdown', `Male: ${booking.maleGuestsCount ?? 0} · Female: ${booking.femaleGuestsCount ?? 0} · Child: ${booking.childGuestsCount ?? 0}`],
+                ['Address',        booking.address ?? '—'],
                 ...(booking.notes ? [['Notes', booking.notes]] : []),
               ].map(([label, value]) => (
                 <div key={label as string} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBlock: 6, borderBottom: '1px solid var(--border)' }}>

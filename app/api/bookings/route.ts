@@ -83,13 +83,36 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { guests, roomIds, checkOutDate, nights, idProofFileId, idProofUrl, notes, customChargePerNight } = await req.json()
+    const {
+      guests,
+      roomIds,
+      checkOutDate,
+      nights,
+      idProofFileId,
+      idProofUrl,
+      notes,
+      customChargePerNight,
+      address,
+      nationality,
+      totalGuests,
+      maleGuestsCount,
+      femaleGuestsCount,
+      childGuestsCount,
+      purposeOfTravel,
+      paymentMode,
+    } = await req.json()
 
     // Validate required fields
     if (!guests?.length)  return NextResponse.json({ error: 'At least one guest is required' }, { status: 400 })
     if (!roomIds?.length) return NextResponse.json({ error: 'At least one room must be selected' }, { status: 400 })
     if (!checkOutDate)    return NextResponse.json({ error: 'checkOutDate is required' }, { status: 400 })
     if (!nights || nights < 1) return NextResponse.json({ error: 'nights must be >= 1' }, { status: 400 })
+
+    // Validate guest breakdown sum
+    const totalCount = Number(maleGuestsCount || 0) + Number(femaleGuestsCount || 0) + Number(childGuestsCount || 0)
+    if (totalGuests && totalCount !== Number(totalGuests)) {
+      return NextResponse.json({ error: 'Guest counts breakdown (Male + Female + Child) must equal Total Guests' }, { status: 400 })
+    }
 
     await connectDB()
 
@@ -135,6 +158,14 @@ export async function POST(req: NextRequest) {
       status: 'checked_in',
       createdBy: session.user.id,
       customChargePerNight: customChargePerNight ? Number(customChargePerNight) : undefined,
+      address: address?.trim() || undefined,
+      nationality: nationality?.trim() || 'India',
+      totalGuests: totalGuests ? Number(totalGuests) : 1,
+      maleGuestsCount: maleGuestsCount ? Number(maleGuestsCount) : 0,
+      femaleGuestsCount: femaleGuestsCount ? Number(femaleGuestsCount) : 0,
+      childGuestsCount: childGuestsCount ? Number(childGuestsCount) : 0,
+      purposeOfTravel: purposeOfTravel?.trim() || undefined,
+      paymentMode: paymentMode || 'cash',
     })
 
     // Mark rooms as occupied

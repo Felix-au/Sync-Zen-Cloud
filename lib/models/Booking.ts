@@ -36,6 +36,14 @@ export interface IBooking extends Document {
   nights: number
   /** Custom per-night charge set at check-in time. Overrides room's pricePerNight. */
   customChargePerNight?: number
+  address?: string
+  nationality: string
+  totalGuests: number
+  maleGuestsCount: number
+  femaleGuestsCount: number
+  childGuestsCount: number
+  purposeOfTravel?: string
+  paymentMode: 'cash' | 'online'
   createdBy: mongoose.Types.ObjectId
   createdAt: Date
 }
@@ -72,6 +80,14 @@ const BookingSchema = new Schema<IBooking>(
     notes: { type: String, trim: true },
     nights: { type: Number, required: true, min: 1 },
     customChargePerNight: { type: Number, min: 0 },
+    address: { type: String, trim: true },
+    nationality: { type: String, required: true, trim: true, default: 'India' },
+    totalGuests: { type: Number, required: true, min: 1, default: 1 },
+    maleGuestsCount: { type: Number, required: true, min: 0, default: 0 },
+    femaleGuestsCount: { type: Number, required: true, min: 0, default: 0 },
+    childGuestsCount: { type: Number, required: true, min: 0, default: 0 },
+    purposeOfTravel: { type: String, trim: true },
+    paymentMode: { type: String, enum: ['cash', 'online'], required: true, default: 'cash' },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
   {
