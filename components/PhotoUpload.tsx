@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { ImageCropper } from './ImageCropper'
 
 interface PhotoUploadProps {
   onChange: (dataUri: string, filename: string) => void
@@ -19,6 +20,8 @@ interface PhotoUploadProps {
  */
 export function PhotoUpload({ onChange, previewUrl, label = 'Upload Photo', compact = false }: PhotoUploadProps) {
   const [dragging, setDragging] = useState(false)
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
+  const [tempFilename, setTempFilename] = useState<string>('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   function handleFile(file: File) {
@@ -40,41 +43,10 @@ export function PhotoUpload({ onChange, previewUrl, label = 'Upload Photo', comp
     }
     reader.onload = (e) => {
       const dataUri = e.target?.result as string
-      if (!dataUri) {
-        console.error("PhotoUpload: FileReader returned empty result")
-        return
+      if (dataUri) {
+        setCropImageSrc(dataUri)
+        setTempFilename(file.name.replace(/\.[^.]+$/, '.jpg'))
       }
-
-      const img = new Image()
-      img.onerror = (err) => {
-        console.error("PhotoUpload: Image decode error. Format may be unsupported (e.g. raw HEIC).", err)
-        alert("Could not decode image. If you are using an iPhone, try selecting the photo from your library or check your camera format settings (Settings > Camera > Formats > Most Compatible).")
-      }
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas')
-          const maxDim = 1024
-          let { width, height } = img
-          if (width > maxDim || height > maxDim) {
-            if (width > height) { height = (height / width) * maxDim; width = maxDim }
-            else { width = (width / height) * maxDim; height = maxDim }
-          }
-          canvas.width = width
-          canvas.height = height
-          
-          const ctx = canvas.getContext('2d')
-          if (!ctx) {
-            console.error("PhotoUpload: Failed to get canvas 2D context")
-            return
-          }
-          ctx.drawImage(img, 0, 0, width, height)
-          onChange(canvas.toDataURL('image/jpeg', 0.85), file.name.replace(/\.[^.]+$/, '.jpg'))
-          console.log("PhotoUpload: Successfully processed image")
-        } catch (err) {
-          console.error("PhotoUpload: Canvas drawing error:", err)
-        }
-      }
-      img.src = dataUri
     }
     reader.readAsDataURL(file)
   }
@@ -109,43 +81,57 @@ export function PhotoUpload({ onChange, previewUrl, label = 'Upload Photo', comp
   /* ── Compact circular avatar ─────────────────────────────────── */
   if (compact) {
     return (
-      <button
-        type="button"
-        onClick={trigger}
-        style={{
-          position: 'relative',
-          width: 72, height: 72,
-          borderRadius: '50%',
-          border: '2px dashed var(--border-hi)',
-          background: previewUrl ? 'none' : 'var(--elevated)',
-          cursor: 'pointer',
-          overflow: 'hidden',
-          transition: 'border-color var(--t-base)',
-          flexShrink: 0,
-        }}
-        onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
-        onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-hi)')}
-        title="Take photo or choose file"
-      >
-        {previewUrl
-          ? <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : <span style={{ fontSize: 30, opacity: 0.4, lineHeight: '72px' }}>📷</span>
-        }
-        {/* Subtle edit overlay when a photo is already set */}
-        {previewUrl && (
-          <span style={{
-            position: 'absolute', inset: 0,
-            background: 'rgba(0,0,0,0.35)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 14, color: '#fff', opacity: 0,
-            transition: 'opacity var(--t-fast)',
+      <>
+        <button
+          type="button"
+          onClick={trigger}
+          style={{
+            position: 'relative',
+            width: 72, height: 72,
+            borderRadius: '50%',
+            border: '2px dashed var(--border-hi)',
+            background: previewUrl ? 'none' : 'var(--elevated)',
+            cursor: 'pointer',
+            overflow: 'hidden',
+            transition: 'border-color var(--t-base)',
+            flexShrink: 0,
           }}
-          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-          onMouseLeave={e => (e.currentTarget.style.opacity = '0')}
-          >✎</span>
+          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-hi)')}
+          title="Take photo or choose file"
+        >
+          {previewUrl
+            ? <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <span style={{ fontSize: 30, opacity: 0.4, lineHeight: '72px' }}>📷</span>
+          }
+          {/* Subtle edit overlay when a photo is already set */}
+          {previewUrl && (
+            <span style={{
+              position: 'absolute', inset: 0,
+              background: 'rgba(0,0,0,0.35)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 14, color: '#fff', opacity: 0,
+              transition: 'opacity var(--t-fast)',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '0')}
+            >✎</span>
+          )}
+          {hiddenInput}
+        </button>
+
+        {cropImageSrc && (
+          <ImageCropper
+            imageSrc={cropImageSrc}
+            aspectRatio={1}
+            onCrop={(croppedUri) => {
+              onChange(croppedUri, tempFilename)
+              setCropImageSrc(null)
+            }}
+            onCancel={() => setCropImageSrc(null)}
+          />
         )}
-        {hiddenInput}
-      </button>
+      </>
     )
   }
 
@@ -179,6 +165,18 @@ export function PhotoUpload({ onChange, previewUrl, label = 'Upload Photo', comp
         )}
       </div>
       {hiddenInput}
+
+      {cropImageSrc && (
+        <ImageCropper
+          imageSrc={cropImageSrc}
+          aspectRatio={undefined}
+          onCrop={(croppedUri) => {
+            onChange(croppedUri, tempFilename)
+            setCropImageSrc(null)
+          }}
+          onCancel={() => setCropImageSrc(null)}
+        />
+      )}
     </div>
   )
 }
