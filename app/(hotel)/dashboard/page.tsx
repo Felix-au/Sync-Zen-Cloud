@@ -126,7 +126,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="page-title">{hotel?.name ?? 'Dashboard'}</h1>
           <p className="page-subtitle">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Kolkata', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
         <Link href="/checkin" className="btn btn-primary">
@@ -187,7 +187,7 @@ export default function DashboardPage() {
                       <td style={{ fontWeight: 600, color: 'var(--text-pri)' }}>{primary?.name}</td>
                       <td>{rooms}</td>
                       <td style={{ fontSize: 'var(--fs-xs)' }}>
-                        {new Date(b.checkInTime).toLocaleDateString()}
+                        {new Date(b.checkInTime).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })}
                       </td>
                       <td>{b.nights}</td>
                       <td>

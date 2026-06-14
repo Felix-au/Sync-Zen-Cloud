@@ -132,8 +132,8 @@ export default function BookingsPage() {
                       </td>
                       <td style={{ fontWeight: 600, color: 'var(--text-pri)' }}>{primary?.name}</td>
                       <td>{rooms}</td>
-                      <td style={{ fontSize: 'var(--fs-xs)' }}>{new Date(b.checkInTime).toLocaleDateString()}</td>
-                      <td style={{ fontSize: 'var(--fs-xs)' }}>{new Date(b.checkOutDate).toLocaleDateString()}</td>
+                      <td style={{ fontSize: 'var(--fs-xs)' }}>{new Date(b.checkInTime).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })}</td>
+                      <td style={{ fontSize: 'var(--fs-xs)' }}>{new Date(b.checkOutDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })}</td>
                       <td>{b.nights}</td>
                       <td><span className={`badge ${STATUS_CLASS[b.status] ?? 'badge-muted'}`}>{b.status.replace('_', ' ')}</span></td>
                       <td>
