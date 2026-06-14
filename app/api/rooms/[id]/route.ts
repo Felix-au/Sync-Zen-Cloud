@@ -34,6 +34,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     const oldStatus = room.status
 
+    // Enforce servicePersonnel if resolving maintenance
+    if (oldStatus === 'maintenance' && body.status === 'available') {
+      if (!body.servicePersonnel?.trim()) {
+        return NextResponse.json({ error: 'Service personnel name is required to mark room as available' }, { status: 400 })
+      }
+    }
+
     // Apply updates
     for (const key of allowed) {
       if (body[key] !== undefined) {
@@ -45,11 +52,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     // Activity logging
     if (oldStatus === 'maintenance' && room.status === 'available') {
+      const servicePersonnel = body.servicePersonnel?.trim() || 'Unknown'
       await logActivity(
         session.user.id,
         session.user.hotelId!,
         'room_maintenance_resolved',
-        `Room ${room.roomNumber} marked as Available (Serviced) from Maintenance.`
+        `Room ${room.roomNumber} marked as Available (Serviced by ${servicePersonnel}) from Maintenance.`
       )
     } else if (oldStatus !== 'maintenance' && room.status === 'maintenance') {
       await logActivity(
@@ -117,4 +125,26 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   )
 
   return NextResponse.json({ message: 'Room deleted' })
+}
+
+/** GET /api/rooms/[id] — Fetch room and active booking if occupied */
+export async function GET(req: NextRequest, { params }: Params) {
+  const session = await auth()
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  await connectDB()
+  const { id } = await params
+
+  const room = await Room.findOne({ _id: id, hotelId: session.user.hotelId })
+  if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+
+  let booking = null
+  if (room.status === 'occupied') {
+    booking = await Booking.findOne({
+      roomIds: id,
+      status: 'checked_in',
+    }).populate('createdBy', 'name')
+  }
+
+  return NextResponse.json({ room, booking })
 }

@@ -36,6 +36,7 @@ export default function BookingsPage() {
   const [showDateMismatchModal, setShowDateMismatchModal] = useState(false)
   const [showCheckoutOptionsModal, setShowCheckoutOptionsModal] = useState(false)
   const [checking, setChecking] = useState(false)
+  const [servicePersonnel, setServicePersonnel] = useState('')
 
   async function load(s = status, q = search, p = page) {
     setLoading(true)
@@ -110,17 +111,18 @@ export default function BookingsPage() {
     }
   }
 
-  async function handleCheckoutConfirm(action: 'serviced' | 'maintenance') {
+  async function handleCheckoutConfirm(action: 'serviced' | 'maintenance', personnelName?: string) {
     if (!selectedBooking) return
     setChecking(true)
     try {
       const res = await fetch(`/api/bookings/${selectedBooking._id}/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action })
+        body: JSON.stringify({ action, servicePersonnel: personnelName })
       })
       if (res.ok) {
         setShowCheckoutOptionsModal(false)
+        setServicePersonnel('')
         load() // reload bookings list
       } else {
         const data = await res.json()
@@ -296,9 +298,29 @@ export default function BookingsPage() {
             Please select how the rooms should be marked upon check-out:
           </p>
 
+          <div className="input-group" style={{ marginBottom: 4 }}>
+            <label className="input-label" htmlFor="checkout-service-personnel" style={{ fontWeight: 600 }}>
+              Service Personnel Name * <span style={{ color: 'var(--text-mute)', fontWeight: 400 }}>(Required for Check Out &amp; Service)</span>
+            </label>
+            <input
+              id="checkout-service-personnel"
+              type="text"
+              className="input"
+              placeholder="e.g. Ramesh Kumar"
+              value={servicePersonnel}
+              onChange={e => setServicePersonnel(e.target.value)}
+            />
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div
-              onClick={() => { if (!checking) handleCheckoutConfirm('serviced') }}
+              onClick={() => {
+                if (!servicePersonnel.trim()) {
+                  alert('Please enter the name of the service personnel.')
+                  return
+                }
+                if (!checking) handleCheckoutConfirm('serviced', servicePersonnel)
+              }}
               style={{
                 border: '1px solid var(--border)',
                 borderRadius: 'var(--r-md)',

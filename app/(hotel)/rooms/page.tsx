@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Modal } from '@/components/Modal'
 import { canManageRooms } from '@/lib/roles'
 
@@ -33,6 +34,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function RoomsPage() {
   const { data: session } = useSession()
+  const router = useRouter()
   const role = session?.user?.role as string
   const canManage = canManageRooms(role as any)
   const canChangeStatus = role === 'staff' || canManage
@@ -47,6 +49,17 @@ export default function RoomsPage() {
   // Add/edit form state
   const [form, setForm] = useState({ roomNumber: '', roomType: 'Standard', floor: '1', pricePerNight: '0', notes: '' })
   const [saving, setSaving] = useState(false)
+
+  // Occupied room click modal state
+  const [occupiedRoom, setOccupiedRoom] = useState<Room | null>(null)
+  const [activeBooking, setActiveBooking] = useState<any | null>(null)
+  const [loadingBooking, setLoadingBooking] = useState(false)
+  const [showOccupiedModal, setShowOccupiedModal] = useState(false)
+
+  // Maintenance resolve modal state
+  const [showResolveMaintenance, setShowResolveMaintenance] = useState(false)
+  const [maintenanceRoom, setMaintenanceRoom] = useState<Room | null>(null)
+  const [maintenancePersonnel, setMaintenancePersonnel] = useState('')
 
   async function loadRooms() {
     const res = await fetch('/api/rooms')
@@ -105,6 +118,56 @@ export default function RoomsPage() {
     loadRooms()
   }
 
+  async function handleOccupiedCardClick(room: Room) {
+    setOccupiedRoom(room)
+    setLoadingBooking(true)
+    setShowOccupiedModal(true)
+    try {
+      const res = await fetch(`/api/rooms/${room._id}`)
+      const data = await res.json()
+      if (res.ok && data.booking) {
+        setActiveBooking(data.booking)
+      } else {
+        alert(data.error ?? 'Failed to load booking details.')
+        setShowOccupiedModal(false)
+        setOccupiedRoom(null)
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error loading booking details.')
+      setShowOccupiedModal(false)
+      setOccupiedRoom(null)
+    } finally {
+      setLoadingBooking(false)
+    }
+  }
+
+  async function handleResolveMaintenance() {
+    if (!maintenanceRoom || !maintenancePersonnel.trim()) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/rooms/${maintenanceRoom._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'available', servicePersonnel: maintenancePersonnel }),
+      })
+      if (res.ok) {
+        setShowResolveMaintenance(false)
+        setMaintenanceRoom(null)
+        setMaintenancePersonnel('')
+        loadRooms()
+      } else {
+        const data = await res.json()
+        alert(data.error ?? 'Failed to resolve maintenance')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error resolving maintenance')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const displayed = filter === 'all' ? rooms : rooms.filter(r => r.status === filter)
 
   const counts = rooms.reduce((acc, r) => {
@@ -151,9 +214,18 @@ export default function RoomsPage() {
       ) : (
         <div className="room-grid">
           {displayed.map(room => (
-            <div key={room._id} className="glass-card room-card">
+            <div
+              key={room._id}
+              className="glass-card room-card"
+              style={{ cursor: room.status === 'occupied' ? 'pointer' : 'default' }}
+              onClick={() => {
+                if (room.status === 'occupied') {
+                  handleOccupiedCardClick(room)
+                }
+              }}
+            >
               <div className="flex justify-between items-center mb-sm">
-                <div className="room-number">{room.roomNumber}</div>
+                <div className="room-number">Room {room.roomNumber}</div>
                 <span className={`badge ${STATUS_COLOR[room.status]}`}>{STATUS_LABEL[room.status]}</span>
               </div>
               <div className="room-type">Floor {room.floor} · {room.roomType}</div>
@@ -165,22 +237,51 @@ export default function RoomsPage() {
               {(canManage || canChangeStatus) && (
                 <div className="flex gap-xs mt-md flex-wrap">
                   {canManage && (
-                    <button className="btn btn-ghost btn-sm flex-1" onClick={() => openEdit(room)}>Edit</button>
+                    <button
+                      className="btn btn-ghost btn-sm flex-1"
+                      onClick={(e) => { e.stopPropagation(); openEdit(room) }}
+                    >
+                      Edit
+                    </button>
                   )}
                   {canChangeStatus && (
                     <>
                       {room.status !== 'maintenance' && (
-                        <button className="btn btn-ghost btn-sm flex-1" onClick={() => handleStatusChange(room, 'maintenance')} title="Mark under maintenance">🔧</button>
+                        <button
+                          className="btn btn-ghost btn-sm flex-1"
+                          onClick={(e) => { e.stopPropagation(); handleStatusChange(room, 'maintenance') }}
+                          title="Mark under maintenance"
+                        >
+                          🔧
+                        </button>
                       )}
                       {(room.status === 'maintenance' || room.status === 'checkout') && (
-                        <button className="btn btn-ghost btn-sm flex-1" onClick={() => handleStatusChange(room, 'available')} title="Mark as available">
+                        <button
+                          className="btn btn-ghost btn-sm flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (room.status === 'maintenance') {
+                              setMaintenanceRoom(room)
+                              setMaintenancePersonnel('')
+                              setShowResolveMaintenance(true)
+                            } else {
+                              handleStatusChange(room, 'available')
+                            }
+                          }}
+                          title="Mark as available"
+                        >
                           {room.status === 'checkout' ? '✓ Clean' : '✓ Fix'}
                         </button>
                       )}
                     </>
                   )}
                   {canManage && (
-                    <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDelete(room)}>🗑</button>
+                    <button
+                      className="btn btn-danger btn-sm btn-icon"
+                      onClick={(e) => { e.stopPropagation(); handleDelete(room) }}
+                    >
+                      🗑
+                    </button>
                   )}
                 </div>
               )}
@@ -231,6 +332,106 @@ export default function RoomsPage() {
           <label className="input-label" htmlFor="room-notes">Notes (optional)</label>
           <textarea id="room-notes" className="input" placeholder="e.g. Sea view, needs maintenance…" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
         </div>
+      </Modal>
+
+      {/* Resolve Maintenance Modal */}
+      <Modal
+        open={showResolveMaintenance}
+        onClose={() => { setShowResolveMaintenance(false); setMaintenanceRoom(null) }}
+        title={`Resolve Maintenance - Room ${maintenanceRoom?.roomNumber}`}
+        footer={
+          <>
+            <button className="btn btn-ghost" onClick={() => { setShowResolveMaintenance(false); setMaintenanceRoom(null) }}>Cancel</button>
+            <button
+              className="btn btn-primary"
+              disabled={saving || !maintenancePersonnel.trim()}
+              onClick={handleResolveMaintenance}
+            >
+              {saving ? 'Saving…' : 'Mark Available'}
+            </button>
+          </>
+        }
+      >
+        <div className="input-group">
+          <label className="input-label" htmlFor="maintenance-personnel">Service Personnel Name *</label>
+          <input
+            id="maintenance-personnel"
+            className="input"
+            placeholder="Enter service personnel name"
+            value={maintenancePersonnel}
+            onChange={e => setMaintenancePersonnel(e.target.value)}
+            required
+          />
+        </div>
+      </Modal>
+
+      {/* Occupied Room Booking Details Modal */}
+      <Modal
+        open={showOccupiedModal}
+        onClose={() => { setShowOccupiedModal(false); setOccupiedRoom(null); setActiveBooking(null) }}
+        title={`Room ${occupiedRoom?.roomNumber} - Current Booking`}
+        footer={
+          <>
+            <button className="btn btn-ghost" onClick={() => { setShowOccupiedModal(false); setOccupiedRoom(null); setActiveBooking(null) }}>Close</button>
+            {activeBooking && (
+              <button
+                className="btn btn-primary"
+                onClick={() => router.push(`/bookings/${activeBooking._id}`)}
+              >
+                View Full Booking
+              </button>
+            )}
+          </>
+        }
+      >
+        {loadingBooking ? (
+          <div className="flex justify-center" style={{ padding: 'var(--sp-lg)' }}>
+            <span className="spinner" />
+          </div>
+        ) : activeBooking ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-md)' }}>
+            <div style={{ background: 'var(--elevated)', padding: 'var(--sp-md)', borderRadius: 'var(--r-md)', border: '1px solid var(--border)' }}>
+              <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 8, color: 'var(--accent)' }}>
+                Booking Ref: {activeBooking.bookingReference}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', fontSize: 13 }}>
+                <div><span style={{ color: 'var(--text-mute)' }}>Check-in:</span> <strong style={{ color: 'var(--text-pri)' }}>{new Date(activeBooking.checkInTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}</strong></div>
+                <div><span style={{ color: 'var(--text-mute)' }}>Check-out:</span> <strong style={{ color: 'var(--text-pri)' }}>{new Date(activeBooking.checkOutDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })}</strong></div>
+                <div><span style={{ color: 'var(--text-mute)' }}>Nights:</span> <strong style={{ color: 'var(--text-pri)' }}>{activeBooking.nights}</strong></div>
+                <div><span style={{ color: 'var(--text-mute)' }}>Payment Mode:</span> <strong style={{ color: 'var(--text-pri)' }}>{activeBooking.paymentMode?.toUpperCase()}</strong></div>
+                <div><span style={{ color: 'var(--text-mute)' }}>Nationality:</span> <strong style={{ color: 'var(--text-pri)' }}>{activeBooking.nationality}</strong></div>
+                <div><span style={{ color: 'var(--text-mute)' }}>Guests Count:</span> <strong style={{ color: 'var(--text-pri)' }}>{activeBooking.totalGuests}</strong></div>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8, color: 'var(--text-pri)' }}>Guests</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {activeBooking.guests.map((g: any, idx: number) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, background: g.isPrimary ? 'var(--accent-dim)' : 'none', padding: 8, borderRadius: 6, border: g.isPrimary ? '1px solid rgba(59,130,246,0.15)' : 'none' }}>
+                    {g.photoUrl ? (
+                      <img src={g.photoUrl} alt={g.name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>👤</div>
+                    )}
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-pri)' }}>
+                        {g.name} {g.isPrimary && <span style={{ fontSize: 9, padding: '1px 5px', background: 'var(--accent)', color: '#fff', borderRadius: 3, marginLeft: 5 }}>Primary</span>}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-mute)' }}>
+                        {[g.phone, g.age ? `Age ${g.age}` : null, g.sex].filter(Boolean).join(' · ')}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: 'var(--sp-lg)', color: 'var(--text-mute)' }}>
+            No active booking found for this room.
+          </div>
+        )}
       </Modal>
     </div>
   )

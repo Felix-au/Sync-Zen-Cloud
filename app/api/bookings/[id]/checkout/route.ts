@@ -37,13 +37,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   let action = 'serviced'
+  let servicePersonnel = ''
   try {
     const body = await req.json()
     if (body.action === 'maintenance') {
       action = 'maintenance'
+    } else {
+      servicePersonnel = body.servicePersonnel || ''
     }
   } catch (e) {
     // default to serviced
+  }
+
+  if (action === 'serviced' && !servicePersonnel.trim()) {
+    return NextResponse.json({ error: 'Service personnel name is required for Check Out & Service' }, { status: 400 })
   }
 
   const roomIdsList = booking.roomIds.map((r: any) => r._id || r)
@@ -65,7 +72,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     session.user.id,
     session.user.hotelId!,
     'booking_checkout',
-    `Checked out booking ${booking.bookingReference} for room(s): ${roomNumbers}. Rooms marked as ${action === 'maintenance' ? 'Under Maintenance' : 'Available (Serviced)'}.`
+    `Checked out booking ${booking.bookingReference} for room(s): ${roomNumbers}. Rooms marked as ${action === 'maintenance' ? 'Under Maintenance' : `Available (Serviced by ${servicePersonnel.trim()})`}.`
   )
 
   return NextResponse.json({

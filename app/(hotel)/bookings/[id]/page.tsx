@@ -45,6 +45,7 @@ interface Booking {
   childGuestsCount: number
   purposeOfTravel?: string
   paymentMode: string
+  idProofNumber?: string
 }
 
 const STATUS_BADGE: Record<string, string> = {
@@ -68,6 +69,10 @@ export default function BookingDetailPage() {
   // Checkout flow state
   const [showDateMismatchModal, setShowDateMismatchModal] = useState(false)
   const [showCheckoutOptionsModal, setShowCheckoutOptionsModal] = useState(false)
+
+  // Custom modal and PDF states
+  const [modalPhotoUrl, setModalPhotoUrl] = useState<string | null>(null)
+  const [servicePersonnel, setServicePersonnel] = useState('')
 
   useEffect(() => {
     fetch(`/api/bookings/${id}`)
@@ -117,17 +122,18 @@ export default function BookingDetailPage() {
     }
   }
 
-  async function handleCheckoutConfirm(action: 'serviced' | 'maintenance') {
+  async function handleCheckoutConfirm(action: 'serviced' | 'maintenance', personnelName?: string) {
     setChecking(true)
     try {
       const res = await fetch(`/api/bookings/${id}/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action })
+        body: JSON.stringify({ action, servicePersonnel: personnelName })
       })
       if (res.ok) {
         setBooking(prev => prev ? { ...prev, status: 'checked_out' } : null)
         setShowCheckoutOptionsModal(false)
+        setServicePersonnel('')
       } else {
         const data = await res.json()
         alert(data?.error ?? 'Checkout failed')
@@ -162,6 +168,127 @@ export default function BookingDetailPage() {
     } finally {
       setSavingDate(false)
     }
+  }
+
+  function handleDownloadPDF() {
+    if (!booking) return
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) {
+      alert('Pop-up blocker is preventing PDF generation. Please allow pop-ups for this site.')
+      return
+    }
+
+    const guestsListHtml = booking.guests.map((g, i) => `
+      <div class="guest-card" style="display: flex; gap: 20px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; page-break-inside: avoid; background-color: #f9fafb;">
+        ${g.photoUrl ? `<img src="${g.photoUrl}" alt="${g.name}" style="width: 90px; height: 90px; object-fit: cover; border-radius: 6px; border: 1px solid #d1d5db;" />` : '<div style="width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; font-size: 40px; background-color: #e5e7eb; border-radius: 6px; border: 1px solid #d1d5db; color: #9ca3af;">👤</div>'}
+        <div style="flex: 1;">
+          <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #111827; display: flex; align-items: center; gap: 8px;">
+            ${g.name} ${g.isPrimary ? '<span style="background-color: #dbeafe; color: #1e40af; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase;">Primary Guest</span>' : ''}
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+            <div style="font-size: 14px; color: #1f2937;"><strong style="color: #6b7280; font-weight: 600;">Phone:</strong> ${g.phone || '—'}</div>
+            <div style="font-size: 14px; color: #1f2937;"><strong style="color: #6b7280; font-weight: 600;">Age:</strong> ${g.age || '—'}</div>
+            <div style="font-size: 14px; color: #1f2937;"><strong style="color: #6b7280; font-weight: 600;">Sex:</strong> ${g.sex ? g.sex.charAt(0).toUpperCase() + g.sex.slice(1) : '—'}</div>
+          </div>
+        </div>
+      </div>
+    `).join('')
+
+    const roomsListHtml = booking.rooms.map(r => `
+      <div style="font-size: 14px; margin-bottom: 4px; font-weight: bold; color: #1f2937;">Room ${r.roomNumber} (${r.roomType} · Floor ${r.floor})</div>
+    `).join('')
+
+    const checkoutDateStr = new Date(booking.checkOutDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'long' })
+    const checkinDateStr = new Date(booking.checkInTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'long', timeStyle: 'short' })
+
+    const totalRoomsPrice = booking.rooms.reduce((s, r) => s + r.pricePerNight, 0)
+    const chargePerNight = booking.customChargePerNight ?? totalRoomsPrice
+    const totalAmount = chargePerNight * booking.nights
+
+    const plotHTML = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Booking_${booking.bookingReference}</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1f2937; margin: 40px; line-height: 1.5; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #3b82f6; padding-bottom: 15px; margin-bottom: 30px; }
+            .header-title h1 { margin: 0; font-size: 28px; color: #1e3a8a; font-weight: 800; }
+            .header-title p { margin: 5px 0 0 0; color: #6b7280; font-size: 14px; }
+            .ref-box { text-align: right; }
+            .ref-title { font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+            .ref-val { font-family: monospace; font-size: 24px; color: #3b82f6; font-weight: bold; margin-top: 2px; }
+            
+            .section { margin-bottom: 30px; }
+            .section-title { font-size: 18px; font-weight: 700; color: #1e3a8a; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+            
+            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .field { font-size: 14px; display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #f3f4f6; }
+            .label { color: #6b7280; font-weight: 600; }
+            .val { font-weight: 700; color: #1f2937; }
+            
+            .notes-box { border-left: 4px solid #3b82f6; background-color: #eff6ff; padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 14px; color: #1e3a8a; font-style: italic; }
+            
+            @media print {
+              body { margin: 20px; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="header-title">
+              <h1>SyncZen Cloud</h1>
+              <p>Booking details & guest invoice</p>
+            </div>
+            <div class="ref-box">
+              <div class="ref-title">Booking Reference</div>
+              <div class="ref-val">${booking.bookingReference}</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">General Details</div>
+            <div class="grid">
+              <div class="field"><span class="label">Check-in Time</span><span class="val">${checkinDateStr}</span></div>
+              <div class="field"><span class="label">Check-out Date</span><span class="val">${checkoutDateStr}</span></div>
+              <div class="field"><span class="label">Nights</span><span class="val">${booking.nights}</span></div>
+              <div class="field"><span class="label">Payment Mode</span><span class="val">${booking.paymentMode?.toUpperCase()}</span></div>
+              <div class="field"><span class="label">Charge per Night</span><span class="val">₹${chargePerNight.toLocaleString()}</span></div>
+              <div class="field"><span class="label">Total Booking Amount</span><span class="val">₹${totalAmount.toLocaleString()}</span></div>
+              <div class="field"><span class="label">Nationality</span><span class="val">${booking.nationality}</span></div>
+              <div class="field"><span class="label">Purpose of Travel</span><span class="val">${booking.purposeOfTravel || '—'}</span></div>
+              <div class="field"><span class="label">ID Document Number</span><span class="val">${booking.idProofNumber || '—'}</span></div>
+              <div class="field"><span class="label">Status</span><span class="val" style="text-transform: uppercase;">${booking.status.replace('_', ' ')}</span></div>
+            </div>
+            <div style="margin-top: 15px;">
+              <div style="font-size: 14px; color: #6b7280; font-weight: 600; margin-bottom: 6px;">Rooms:</div>
+              ${roomsListHtml}
+            </div>
+          </div>
+
+          ${booking.notes ? `
+            <div class="section">
+              <div class="section-title">Staff Notes</div>
+              <div class="notes-box">${booking.notes}</div>
+            </div>
+          ` : ''}
+
+          <div class="section">
+            <div class="section-title">Guests Details</div>
+            ${guestsListHtml}
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            }
+          </script>
+        </body>
+      </html>
+    `;
+    printWindow.document.write(plotHTML)
+    printWindow.document.close()
   }
 
   if (loading) return (
@@ -210,12 +337,17 @@ export default function BookingDetailPage() {
             Checked in {new Date(booking.checkInTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}
           </p>
         </div>
-        {booking.status === 'checked_in' && (
-          <button className="btn btn-danger" onClick={triggerCheckoutFlow} disabled={checking}>
-            {checking ? <span className="spinner" /> : '🔑'}
-            {checking ? 'Processing…' : 'Check Out Now'}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-ghost" onClick={handleDownloadPDF}>
+            📄 Save PDF
           </button>
-        )}
+          {booking.status === 'checked_in' && (
+            <button className="btn btn-danger" onClick={triggerCheckoutFlow} disabled={checking}>
+              {checking ? <span className="spinner" /> : '🔑'}
+              {checking ? 'Processing…' : 'Check Out Now'}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid-2 gap-lg" style={{ gap: 'var(--sp-lg)' }}>
@@ -248,7 +380,8 @@ export default function BookingDetailPage() {
                       src={g.photoUrl}
                       alt={g.name}
                       className="guest-avatar"
-                      style={{ objectFit: 'cover' }}
+                      style={{ objectFit: 'cover', cursor: 'pointer' }}
+                      onClick={() => setModalPhotoUrl(g.photoUrl || null)}
                     />
                   ) : (
                     <div
@@ -300,7 +433,9 @@ export default function BookingDetailPage() {
                         maxHeight: 280,
                         objectFit: 'contain',
                         background: 'var(--elevated)',
+                        cursor: 'pointer',
                       }}
+                      onClick={() => setModalPhotoUrl(url)}
                     />
                   ))
                 ) : (
@@ -314,7 +449,9 @@ export default function BookingDetailPage() {
                       maxHeight: 280,
                       objectFit: 'contain',
                       background: 'var(--elevated)',
+                      cursor: 'pointer',
                     }}
+                    onClick={() => setModalPhotoUrl(booking.idProofUrl || null)}
                   />
                 )}
               </div>
@@ -378,6 +515,7 @@ export default function BookingDetailPage() {
                     : '—'],
                 ['Checked in by', booking.createdBy?.name ?? '—'],
                 ['Nationality', booking.nationality ?? 'India'],
+                ['ID Document Number', booking.idProofNumber ?? '—'],
                 ['Purpose of Travel', booking.purposeOfTravel ?? '—'],
                 ['Payment Mode', booking.paymentMode ? booking.paymentMode.toUpperCase() : 'CASH'],
                 ['Total Guests', booking.totalGuests ?? booking.guests.length],
@@ -518,16 +656,36 @@ export default function BookingDetailPage() {
             Please select how the rooms should be marked upon check-out:
           </p>
 
+          <div className="input-group" style={{ marginBottom: 4 }}>
+            <label className="input-label" htmlFor="checkout-service-personnel" style={{ fontWeight: 600 }}>
+              Service Personnel Name * <span style={{ color: 'var(--text-mute)', fontWeight: 400 }}>(Required for Check Out &amp; Service)</span>
+            </label>
+            <input
+              id="checkout-service-personnel"
+              type="text"
+              className="input"
+              placeholder="e.g. Ramesh Kumar"
+              value={servicePersonnel}
+              onChange={e => setServicePersonnel(e.target.value)}
+            />
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div
-              onClick={() => { if (!checking) handleCheckoutConfirm('serviced') }}
+              onClick={() => {
+                if (!servicePersonnel.trim()) {
+                  alert('Please enter the name of the service personnel.')
+                  return
+                }
+                if (!checking) handleCheckoutConfirm('serviced', servicePersonnel)
+              }}
               style={{
                 border: '1px solid var(--border)',
                 borderRadius: 'var(--r-md)',
                 padding: 'var(--sp-md)',
                 cursor: checking ? 'not-allowed' : 'pointer',
                 background: 'var(--elevated)',
-                transition: 'border-color var(--t-fast), transform var(--t-fast)',
+                transition: 'border-color var(--t-fast)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -552,7 +710,7 @@ export default function BookingDetailPage() {
                 padding: 'var(--sp-md)',
                 cursor: checking ? 'not-allowed' : 'pointer',
                 background: 'var(--elevated)',
-                transition: 'border-color var(--t-fast), transform var(--t-fast)',
+                transition: 'border-color var(--t-fast)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -570,6 +728,24 @@ export default function BookingDetailPage() {
             </div>
           </div>
         </div>
+      </Modal>
+
+      {/* Photo Preview Modal */}
+      <Modal
+        open={!!modalPhotoUrl}
+        onClose={() => setModalPhotoUrl(null)}
+        title="Image Preview"
+        maxWidth={640}
+      >
+        {modalPhotoUrl && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--elevated)', borderRadius: 'var(--r-md)', padding: 'var(--sp-md)' }}>
+            <img
+              src={modalPhotoUrl}
+              alt="Preview"
+              style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: 'var(--r-sm)' }}
+            />
+          </div>
+        )}
       </Modal>
     </div>
   )

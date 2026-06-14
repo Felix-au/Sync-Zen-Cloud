@@ -52,6 +52,7 @@ export default function CheckInPage() {
 
   // Step 3 — ID proof
   const [idProofs, setIdProofs] = useState<Array<{ dataUri: string; filename: string }>>([])
+  const [idProofNumber, setIdProofNumber] = useState('')
 
   // Submission state
   const [submitting, setSubmitting] = useState(false)
@@ -166,6 +167,7 @@ export default function CheckInPage() {
           idProofUrl: idProofUrls[0] || undefined,
           idProofFileIds,
           idProofUrls,
+          idProofNumber: idProofNumber.trim() || undefined,
           notes: notes.trim() || undefined,
           customChargePerNight: customChargePerNight ? Number(customChargePerNight) : undefined,
           address: address.trim() || undefined,
@@ -492,6 +494,17 @@ export default function CheckInPage() {
                   ))}
                 </div>
               )}
+
+              <div className="input-group" style={{ marginBottom: 'var(--sp-md)' }}>
+                <label className="input-label" htmlFor="id-proof-number">ID Document Number</label>
+                <input
+                  id="id-proof-number"
+                  className="input"
+                  placeholder="Enter document number (alphanumeric)"
+                  value={idProofNumber}
+                  onChange={e => setIdProofNumber(e.target.value)}
+                />
+              </div>
 
               <PhotoUpload
                 label={idProofs.length > 0 ? "Add Another ID Document" : "Group ID Document"}
