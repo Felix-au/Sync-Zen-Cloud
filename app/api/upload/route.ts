@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import Photo from '@/lib/models/Photo'
+import { uploadToCloudinary } from '@/lib/cloudinary'
 import { auth } from '@/lib/auth'
 import { canCheckIn } from '@/lib/roles'
 
 /**
  * POST /api/upload
  *
- * Stores a base64-encoded photo in MongoDB and returns a stable URL
- * via the /api/photos/[id] route.
+ * Receives a base64 data URI from the client, uploads it to Cloudinary,
+ * and returns the public_id (fileId) and CDN URL.
  *
- * Replaces the previous Google Drive integration which failed with
- * "Service Accounts do not have storage quota".
+ * Body:
+ * {
+ *   data: string,     // base64 data URI, e.g. "data:image/jpeg;base64,..."
+ *   filename: string, // used for reference only (Cloudinary generates its own name)
+ *   folder: string,   // Cloudinary folder path, e.g. "checkin/1234567890"
+ * }
  *
- * Body: { data: string, filename: string, folder: string }
- * Response: { fileId: string, url: string }
+ * Response:
+ * { fileId: string, url: string }
  */
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -22,36 +25,28 @@ export async function POST(req: NextRequest) {
   if (!canCheckIn(session.user.role as any)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   try {
-    const { data, filename, folder } = await req.json()
+    const { data, folder } = await req.json()
 
-    if (!data || !filename) {
-      return NextResponse.json({ error: 'data and filename are required' }, { status: 400 })
+    if (!data) {
+      return NextResponse.json({ error: 'data is required' }, { status: 400 })
     }
 
-    // Validate it's a proper data URI
+    // Validate it's a data URI
     if (!data.startsWith('data:')) {
-      return NextResponse.json({ error: 'Invalid data URI format' }, { status: 400 })
+      return NextResponse.json({ error: 'data must be a base64 data URI' }, { status: 400 })
     }
 
-    const mimeMatch = data.match(/^data:([^;]+);base64,/)
-    const mimeType  = mimeMatch?.[1] ?? 'image/jpeg'
+    // Scope uploads under hotel ID so they're easy to find and clean up
+    const cloudFolder = `synczen/${session.user.hotelId ?? 'unassigned'}/${folder ?? 'misc'}`
 
-    await connectDB()
+    const result = await uploadToCloudinary(data, cloudFolder)
 
-    const photo = await Photo.create({
-      hotelId:  session.user.hotelId ?? null,
-      filename: filename.trim(),
-      mimeType,
-      dataUri:  data,
-      folder:   folder ?? '',
-    })
-
-    const fileId = photo._id.toString()
-    const url    = `/api/photos/${fileId}`
-
-    return NextResponse.json({ fileId, url }, { status: 201 })
+    return NextResponse.json(result, { status: 201 })
   } catch (err: any) {
-    console.error('[upload] Error:', err?.message ?? err)
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+    console.error('[upload] Cloudinary error:', err?.message ?? err)
+    return NextResponse.json(
+      { error: 'Upload failed', detail: err.message },
+      { status: 500 }
+    )
   }
 }
