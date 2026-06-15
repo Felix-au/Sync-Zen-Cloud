@@ -220,13 +220,14 @@ body {
   bottom: 0;
   z-index: 100;
   overflow: hidden;
+  padding: 0 var(--sp-sm) var(--sp-xl) var(--sp-sm);
 }
 
 .sidebar-brand {
   display: flex;
   align-items: center;
   gap: var(--sp-sm);
-  padding: var(--sp-lg) var(--sp-md);
+  padding: var(--sp-lg) var(--sp-sm);
   border-bottom: 1px solid var(--border);
 }
 
@@ -317,7 +318,7 @@ body {
 }
 
 .sidebar-footer {
-  padding: var(--sp-md);
+  padding: var(--sp-md) var(--sp-xs) 0 var(--sp-xs);
   border-top: 1px solid var(--border);
   font-size: var(--fs-xs);
   color: var(--text-mute);
