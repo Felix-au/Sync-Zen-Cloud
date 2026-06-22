@@ -265,6 +265,8 @@ export default function CheckInPage() {
                       value={checkOutDate}
                       min={new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}
                       onChange={e => setCheckOutDate(e.target.value)}
+                      onClick={e => (e.target as any).showPicker?.()}
+                      onFocus={e => (e.target as any).showPicker?.()}
                     />
                   </div>
                   <div className="input-group">
@@ -719,7 +721,7 @@ export default function CheckInPage() {
 
         {/* ── Navigation buttons ────────────────────────────────────── */}
         <div className="checkin-nav flex justify-between mt-xl">
-          <button className="btn btn-ghost" onClick={goPrev} disabled={step === 'rooms' || submitting}>
+          <button className="btn btn-ghost" onClick={goPrev} disabled={step === 'guests' || submitting}>
             ← Back
           </button>
 
