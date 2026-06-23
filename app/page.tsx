@@ -3,8 +3,60 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
 import { useTheme } from '@/components/ThemeProvider'
+
+interface TiltCardProps {
+  children: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
+  max?: number
+  [key: string]: any
+}
+
+function TiltCard({ children, className, style, max = 10, ...props }: TiltCardProps) {
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+
+  // Map mouse position to rotation angles (e.g. -max deg to max deg)
+  const rotateX = useTransform(y, [-0.5, 0.5], [max, -max])
+  const rotateY = useTransform(x, [-0.5, 0.5], [-max, max])
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const width = rect.width
+    const height = rect.height
+    const mouseX = event.clientX - rect.left - width / 2
+    const mouseY = event.clientY - rect.top - height / 2
+    x.set(mouseX / width)
+    y.set(mouseY / height)
+  }
+
+  const handleMouseLeave = () => {
+    x.set(0)
+    y.set(0)
+  }
+
+  return (
+    <motion.div
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: 'preserve-3d',
+        perspective: 1000,
+        ...style
+      }}
+      className={className}
+      {...props}
+    >
+      <div style={{ transform: 'translateZ(15px)', transformStyle: 'preserve-3d', height: '100%', width: '100%' }}>
+        {children}
+      </div>
+    </motion.div>
+  )
+}
 
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState('Dashboard')
@@ -792,13 +844,13 @@ export default function LandingPage() {
                   desc: 'Weighted role-based permissions restrict staff actions and protect hotel properties.',
                 },
               ].map((feat, idx) => (
-                <motion.div
+                <TiltCard
                   key={idx}
                   className="square-card"
                   initial={{ opacity: 0, scale: 0.95, y: 15 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.1 * idx, ease: 'easeOut' }}
-                  whileHover={{ y: -5, scale: 1.02 }}
+                  whileHover={{ scale: 1.03 }}
                 >
                   <div
                     style={{
@@ -822,7 +874,7 @@ export default function LandingPage() {
                   <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-sec)', margin: 0, lineHeight: 1.4 }}>
                     {feat.desc}
                   </p>
-                </motion.div>
+                </TiltCard>
               ))}
             </div>
           </div>
@@ -1118,20 +1170,20 @@ export default function LandingPage() {
               desc: 'Set custom nightly rate, pick payment mode, then commit the booking.',
             },
           ].map((step, idx) => (
-            <motion.div
+            <TiltCard
               key={idx}
               className="lp-flow-card"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 * idx }}
-              whileHover={{ y: -5, scale: 1.02 }}
+              whileHover={{ scale: 1.03 }}
             >
               <div className="lp-flow-num">{step.num}</div>
               <h3 className="lp-flow-title">{step.title}</h3>
               <p className="lp-flow-desc">{step.desc}</p>
               {idx < 3 && <div className="lp-flow-arrow">→</div>}
-            </motion.div>
+            </TiltCard>
           ))}
         </div>
       </motion.section>
@@ -1198,14 +1250,14 @@ export default function LandingPage() {
               ],
             },
           ].map((role, idx) => (
-            <motion.div
+            <TiltCard
               key={idx}
               className={`lp-role-card ${role.class}`}
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 * idx }}
-              whileHover={{ y: -4, scale: 1.01 }}
+              whileHover={{ scale: 1.02 }}
             >
               <div className="lp-role-header">
                 <div className="lp-role-title-row">
@@ -1222,7 +1274,7 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </TiltCard>
           ))}
         </div>
       </motion.section>
@@ -1301,8 +1353,9 @@ export default function LandingPage() {
         transition={{ duration: 0.6 }}
         style={{ maxWidth: '1200px', margin: 'var(--sp-2xl) auto 0 auto', padding: '0 var(--sp-2xl)' }}
       >
-        <div
+        <TiltCard
           className="glass-card"
+          max={3}
           style={{
             padding: 'var(--sp-xl)',
             borderRadius: 'var(--r-xl)',
@@ -1399,7 +1452,7 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-        </div>
+        </TiltCard>
       </motion.section>
 
       {/* Footer */}
