@@ -90,14 +90,14 @@ const rolesGridVariants = {
 }
 
 const roleCardVariants = {
-  hidden: { opacity: 0, rotateY: 45 },
+  hidden: { opacity: 0, rotateY: 0 },
   visible: {
     opacity: 1,
-    rotateY: 0,
+    rotateY: [0, 45, 45, 0],
     transition: {
-      type: 'spring',
-      stiffness: 50,
-      damping: 12
+      duration: 2.0,
+      times: [0, 0.2, 0.8, 1.0],
+      ease: "easeInOut"
     }
   }
 }
@@ -1119,6 +1119,7 @@ export default function LandingPage() {
               marginTop: '0px',
               perspective: 1200,
               transformStyle: 'preserve-3d',
+              animation: 'none'
             }}
             initial={{ opacity: 0, scale: 0.8, rotateX: 20, rotateY: -45 }}
             whileInView={{ opacity: 1, scale: 1.0, rotateX: 0, rotateY: 0 }}
