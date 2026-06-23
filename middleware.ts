@@ -29,8 +29,13 @@ export default auth((req: any) => {
 
   // Handle root path redirect
   if (pathname === '/') {
-    const dest = isAuthed ? (role === 'super_admin' ? '/super/dashboard' : '/dashboard') : '/login'
-    return NextResponse.redirect(new URL(dest, req.url))
+    if (isAuthed) {
+      // Authenticated → send straight to dashboard
+      const dest = role === 'super_admin' ? '/super/dashboard' : '/dashboard'
+      return NextResponse.redirect(new URL(dest, req.url))
+    }
+    // Unauthenticated → show the public landing page
+    return NextResponse.next()
   }
 
   // Auth-only routes (redirect away when already logged in)
