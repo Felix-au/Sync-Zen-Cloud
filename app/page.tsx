@@ -188,6 +188,8 @@ export default function LandingPage() {
           box-shadow: 0 8px 30px var(--accent-glow);
         }
         .square-card {
+          position: relative;
+          overflow: hidden;
           background: var(--glass-bg);
           backdrop-filter: blur(20px) saturate(180%);
           border: 1px solid var(--glass-border);
@@ -682,7 +684,6 @@ export default function LandingPage() {
         }
         .local-btn-download:hover {
           background: var(--accent-hi);
-          transform: translateY(-2px);
           box-shadow: 0 6px 20px var(--accent-glow);
         }
         .local-btn-github {
@@ -955,14 +956,14 @@ export default function LandingPage() {
                 {
                   icon: '⚡',
                   color: 'var(--accent)',
-                  title: 'Check-In Wizard',
-                  desc: 'A linear 4-step workflow to register guests, specify ID details, allocate rooms, and calculate stays.',
+                  title: 'Simple to Use',
+                  desc: 'A clean, intuitive 4-step check-in workflow that simplifies guest registration, room selection, and billing.',
                 },
                 {
                   icon: '📸',
                   color: 'var(--purple)',
-                  title: 'In-Browser Crop',
-                  desc: 'Crop, scale, and adjust guest avatars directly before saving check-in files to ensure optimized resolution.',
+                  title: 'Self-Contained',
+                  desc: 'Zero external dependencies or setups required. Crop, scale, and manage guest documents entirely within your browser.',
                 },
                 {
                   icon: '☁️',
@@ -985,26 +986,28 @@ export default function LandingPage() {
                   transition={{ duration: 0.4, delay: 0.1 * idx, ease: 'easeOut' }}
                   whileHover={{ scale: 1.03 }}
                 >
+                  {/* Large absolute background watermark icon */}
                   <div
                     style={{
-                      fontSize: '22px',
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: 'var(--r-md)',
-                      background: `${feat.color}15`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: `1px solid ${feat.color}25`,
-                      flexShrink: 0,
+                      position: 'absolute',
+                      right: '-15px',
+                      bottom: '-25px',
+                      fontSize: '110px',
+                      opacity: 0.08,
+                      transform: 'rotate(-15deg)',
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                      color: feat.color,
                     }}
                   >
                     {feat.icon}
                   </div>
-                  <h4 style={{ fontSize: 'var(--fs-sm)', fontWeight: 800, color: 'var(--text-pri)', margin: 0 }}>
+                  
+                  {/* Content */}
+                  <h4 style={{ fontSize: 'var(--fs-sm)', fontWeight: 800, color: 'var(--text-pri)', margin: 0, zIndex: 2 }}>
                     {feat.title}
                   </h4>
-                  <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-sec)', margin: 0, lineHeight: 1.4 }}>
+                  <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-sec)', margin: 0, lineHeight: 1.4, zIndex: 2 }}>
                     {feat.desc}
                   </p>
                 </TiltCard>
@@ -1103,13 +1106,19 @@ export default function LandingPage() {
                       </div>
 
                       {/* Step Indicators */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: 'var(--text-mute)', fontWeight: 'bold', padding: '2px 0' }}>
-                        {['Guest', 'ID Proof', 'Room', 'Confirm'].map((name, i) => (
-                          <span key={i} style={{ color: demoStep === i + 1 ? 'var(--accent)' : 'inherit' }}>
-                            {i + 1}. {name}
-                          </span>
-                        ))}
-                      </div>
+                      {demoStep <= 4 ? (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: 'var(--text-mute)', fontWeight: 'bold', padding: '2px 0' }}>
+                          {['Guest', 'ID Proof', 'Room', 'Confirm'].map((name, i) => (
+                            <span key={i} style={{ color: demoStep === i + 1 ? 'var(--accent)' : 'inherit' }}>
+                              {i + 1}. {name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', justifyContent: 'center', fontSize: '8px', color: '#10b981', fontWeight: 'bold', padding: '2px 0' }}>
+                          🎉 Booking Confirmed Successfully
+                        </div>
+                      )}
 
                       {/* Step Contents */}
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '10px', marginTop: '4px' }}>
@@ -1197,31 +1206,110 @@ export default function LandingPage() {
                             </div>
                           </>
                         )}
+
+                        {demoStep === 5 && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ type: 'spring', duration: 0.5 }}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '8px',
+                              padding: '12px 0',
+                              textAlign: 'center',
+                              flex: 1,
+                            }}
+                          >
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ delay: 0.2, type: 'spring', stiffness: 250, damping: 15 }}
+                              style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '50%',
+                                background: 'rgba(16, 185, 129, 0.15)',
+                                color: '#10b981',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '20px',
+                                border: '2px solid #10b981',
+                                boxShadow: '0 0 15px rgba(16, 185, 129, 0.3)',
+                              }}
+                            >
+                              ✓
+                            </motion.div>
+                            <motion.h3
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.3 }}
+                              style={{ fontSize: '13px', fontWeight: 800, margin: 0, color: 'var(--text-pri)' }}
+                            >
+                              Booking Done!
+                            </motion.h3>
+                            <motion.p
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.4 }}
+                              style={{ fontSize: '9px', color: 'var(--text-sec)', margin: 0, maxWidth: '180px', lineHeight: 1.4 }}
+                            >
+                              That is all you need to do, it&apos;s as simple as that.
+                            </motion.p>
+                          </motion.div>
+                        )}
                       </div>
 
                       {/* Action Buttons */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '4px', borderTop: '1px solid var(--border)' }}>
-                        <button
-                          onClick={() => {
-                            if (demoStep > 1) setDemoStep(demoStep - 1);
-                            else setIsDemoCheckInOpen(false);
-                          }}
-                          style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '2px', padding: '3px 8px', fontSize: '9px', cursor: 'pointer', color: 'var(--text-sec)' }}
-                        >
-                          {demoStep === 1 ? 'Cancel' : 'Back'}
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (demoStep < 4) {
-                              setDemoStep(demoStep + 1);
-                            } else {
+                        {demoStep === 5 ? (
+                          <button
+                            onClick={() => {
                               setIsDemoCheckInOpen(false);
-                            }
-                          }}
-                          style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '2px', padding: '3px 8px', fontSize: '9px', fontWeight: 'bold', cursor: 'pointer' }}
-                        >
-                          {demoStep === 4 ? 'Confirm Booking' : 'Next'}
-                        </button>
+                            }}
+                            style={{
+                              background: 'var(--accent)',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '2px',
+                              padding: '4px 12px',
+                              fontSize: '9px',
+                              fontWeight: 'bold',
+                              cursor: 'pointer',
+                              width: '100%',
+                              textAlign: 'center',
+                            }}
+                          >
+                            Done
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => {
+                                  if (demoStep > 1) setDemoStep(demoStep - 1);
+                                  else setIsDemoCheckInOpen(false);
+                              }}
+                              style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '2px', padding: '3px 8px', fontSize: '9px', cursor: 'pointer', color: 'var(--text-sec)' }}
+                            >
+                              {demoStep === 1 ? 'Cancel' : 'Back'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (demoStep < 4) {
+                                  setDemoStep(demoStep + 1);
+                                } else {
+                                  setDemoStep(5);
+                                }
+                              }}
+                              style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '2px', padding: '3px 8px', fontSize: '9px', fontWeight: 'bold', cursor: 'pointer' }}
+                            >
+                              {demoStep === 4 ? 'Confirm Booking' : 'Next'}
+                            </button>
+                          </>
+                        )}
                       </div>
                     </motion.div>
                   ) : (
@@ -1664,9 +1752,8 @@ export default function LandingPage() {
           transition={{ duration: 0.6 }}
           style={{ width: '100%', maxWidth: '1200px', padding: '0 var(--sp-2xl)', zIndex: 10 }}
         >
-        <TiltCard
+        <div
           className="glass-card"
-          max={3}
           style={{
             padding: 'var(--sp-xl)',
             borderRadius: 'var(--r-xl)',
@@ -1682,7 +1769,7 @@ export default function LandingPage() {
                 SyncZen Local Station
               </h2>
               <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-sec)', lineHeight: 1.6, margin: '0 0 var(--sp-md) 0' }}>
-                Need to run without internet dependency or external servers? **SyncZen Local** is a fully standalone offline workstation. It couples a native Electron desktop app with companion mobile check-in assistant devices over your local WiFi network.
+                Need to run without internet dependency or external servers? <strong>SyncZen Local</strong> is a fully standalone offline workstation. It couples a native Electron desktop app with companion mobile check-in assistant devices over your local WiFi network.
               </p>
               
               <div className="local-feature-list">
@@ -1763,7 +1850,7 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-        </TiltCard>
+        </div>
         </motion.div>
       </section>
 
