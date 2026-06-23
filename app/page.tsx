@@ -2245,7 +2245,7 @@ export default function LandingPage() {
           {/* Slide 6: Contact & Support (Premium Support Form) */}
           <section id="contact-support" className="slide-section">
             <motion.div
-              initial={{ opacity: 0, scale: 0.8, rotateX: 20, rotateY: -45 }}
+              initial={{ opacity: 0, scale: 0.8, rotateX: -20, rotateY: 45 }}
               whileInView={{ opacity: 1, scale: 1.0, rotateX: 0, rotateY: 0 }}
               viewport={{ once: false, amount: 0.1 }}
               transition={{ duration: 1.2, type: 'spring', stiffness: 40, damping: 12 }}
@@ -2269,7 +2269,6 @@ export default function LandingPage() {
               >
                 {/* Centered Header Block */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: 'var(--sp-lg)' }}>
-                  <span className="local-promo-badge">Get in Touch</span>
                   <h2 className="local-promo-title" style={{ marginBottom: '8px' }}>
                     Contact Support
                   </h2>
