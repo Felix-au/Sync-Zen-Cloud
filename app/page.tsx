@@ -115,6 +115,48 @@ export default function LandingPage() {
   const [showLoader, setShowLoader] = useState(true)
   const { data: session } = useSession()
 
+  const [contactName, setContactName] = useState('')
+  const [contactEmail, setContactEmail] = useState('')
+  const [contactMessage, setContactMessage] = useState('')
+  const [isContactSubmitting, setIsContactSubmitting] = useState(false)
+  const [contactStatus, setContactStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' })
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (isContactSubmitting) return
+
+    setIsContactSubmitting(true)
+    setContactStatus({ type: null, message: '' })
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: contactName,
+          email: contactEmail,
+          message: contactMessage,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        setContactStatus({ type: 'success', message: 'Thank you! Your message has been sent successfully.' })
+        setContactName('')
+        setContactEmail('')
+        setContactMessage('')
+      } else {
+        setContactStatus({ type: 'error', message: data.message || 'Failed to send message. Please try again.' })
+      }
+    } catch (err) {
+      console.error('Submit contact error:', err)
+      setContactStatus({ type: 'error', message: 'An unexpected error occurred. Please try again.' })
+    } finally {
+      setIsContactSubmitting(false)
+    }
+  }
+
   useEffect(() => {
     // Enable manual scroll restoration and force scroll to top on first mount
     if (typeof window !== 'undefined') {
@@ -999,6 +1041,7 @@ export default function LandingPage() {
               <a href="#features" className="nav-link">Features</a>
               <a href="#why-synczen" className="nav-link">Why SyncZen</a>
               <a href="#local-station" className="nav-link">SyncZen Local</a>
+              <a href="#contact-support" className="nav-link">Contact</a>
             </nav>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-sm)' }}>
@@ -2192,6 +2235,128 @@ export default function LandingPage() {
                     </motion.div>
                   </motion.div>
                 </div>
+              </div>
+            </motion.div>
+          </section>
+
+          {/* Slide 6: Contact & Support (Premium Support Form) */}
+          <section id="contact-support" className="slide-section">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, rotateX: 20, rotateY: -45 }}
+              whileInView={{ opacity: 1, scale: 1.0, rotateX: 0, rotateY: 0 }}
+              viewport={{ once: false, amount: 0.1 }}
+              transition={{ duration: 1.2, type: 'spring', stiffness: 40, damping: 12 }}
+              style={{
+                width: '100%',
+                maxWidth: '650px',
+                padding: '0 var(--sp-2xl)',
+                zIndex: 10,
+                perspective: 1200,
+                transformStyle: 'preserve-3d',
+              }}
+            >
+              <div
+                className="glass-card"
+                style={{
+                  padding: 'var(--sp-xl)',
+                  borderRadius: 'var(--r-xl)',
+                  border: '1px solid rgba(124, 58, 237, 0.15)',
+                  background: 'linear-gradient(135deg, var(--surface) 0%, rgba(124, 58, 237, 0.03) 100%)',
+                }}
+              >
+                {/* Centered Header Block */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: 'var(--sp-lg)' }}>
+                  <span className="local-promo-badge">Get in Touch</span>
+                  <h2 className="local-promo-title" style={{ marginBottom: '8px' }}>
+                    Contact Support
+                  </h2>
+                  <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-sec)', lineHeight: 1.5, margin: 0 }}>
+                    Submit a request to developers or report an issue in the workspace
+                  </p>
+                </div>
+
+                <form onSubmit={handleContactSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-md)' }}>
+                  {contactStatus.type && (
+                    <div style={{
+                      background: contactStatus.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'var(--red-dim)',
+                      border: contactStatus.type === 'success' ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(239, 68, 68, 0.25)',
+                      borderRadius: 'var(--r-md)',
+                      padding: '10px 14px',
+                      fontSize: 'var(--fs-sm)',
+                      color: contactStatus.type === 'success' ? '#10b981' : 'var(--red)',
+                    }}>
+                      {contactStatus.message}
+                    </div>
+                  )}
+
+                  <div className="input-group">
+                    <label className="input-label" htmlFor="contact-name">Name</label>
+                    <input
+                      id="contact-name"
+                      type="text"
+                      className="input"
+                      required
+                      placeholder="Your Name"
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      disabled={isContactSubmitting}
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label className="input-label" htmlFor="contact-email">Email Address</label>
+                    <input
+                      id="contact-email"
+                      type="email"
+                      className="input"
+                      required
+                      placeholder="your.email@example.com"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      disabled={isContactSubmitting}
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label className="input-label" htmlFor="contact-message">Message</label>
+                    <textarea
+                      id="contact-message"
+                      className="input"
+                      rows={4}
+                      required
+                      placeholder="How can we help you?"
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      disabled={isContactSubmitting}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="hero-btn-primary"
+                    disabled={isContactSubmitting}
+                    style={{
+                      width: '100%',
+                      marginTop: 'var(--sp-xs)',
+                      padding: '12px 24px',
+                      fontSize: 'var(--fs-sm)',
+                      background: 'var(--accent)',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    {isContactSubmitting ? (
+                      <>
+                        <span className="spinner" style={{ display: 'inline-block' }} />
+                        Sending Message...
+                      </>
+                    ) : (
+                      'Send Message'
+                    )}
+                  </button>
+                </form>
               </div>
             </motion.div>
           </section>
