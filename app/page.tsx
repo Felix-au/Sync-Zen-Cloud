@@ -110,8 +110,23 @@ export default function LandingPage() {
   const [demoStep, setDemoStep] = useState(1)
   const [isMobile, setIsMobile] = useState(false)
   const [mockupSidebarOpen, setMockupSidebarOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+  const [showLoader, setShowLoader] = useState(true)
 
   useEffect(() => {
+    // Enable manual scroll restoration and force scroll to top on first mount
+    if (typeof window !== 'undefined') {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual'
+      }
+      window.scrollTo(0, 0)
+    }
+
+    setIsMounted(true)
+    const timer = setTimeout(() => {
+      setShowLoader(false)
+    }, 600)
+
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 900)
     }
@@ -134,23 +149,60 @@ export default function LandingPage() {
     handleScroll()
 
     return () => {
+      clearTimeout(timer)
       window.removeEventListener('resize', handleResize)
       window.removeEventListener('scroll', handleScroll, { capture: true })
     }
   }, [])
 
   return (
-    <div
-      style={{
-        background: 'var(--bg)',
-        color: 'var(--text-pri)',
-        fontFamily: 'var(--font-sans)',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        transition: 'background var(--t-slow), color var(--t-slow)',
-      }}
-    >
+    <>
+      <AnimatePresence>
+        {showLoader && (
+          <motion.div
+            key="page-loader"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: 'easeInOut' }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: '#000000',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 99999,
+            }}
+          >
+            <motion.div
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}
+            >
+              <Image
+                src="/logo.png"
+                alt="SyncZen"
+                width={40}
+                height={40}
+                style={{ borderRadius: '8px', objectFit: 'contain' }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {isMounted && (
+        <div
+          style={{
+            background: 'var(--bg)',
+            color: 'var(--text-pri)',
+            fontFamily: 'var(--font-sans)',
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'relative',
+            transition: 'background var(--t-slow), color var(--t-slow)',
+          }}
+        >
       {/* Background Floating Orbs (Animations for Premium Feel) */}
       <div
         style={{
@@ -1924,8 +1976,8 @@ export default function LandingPage() {
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border)' }}>
                       <th style={{ textAlign: 'left', padding: '12px', fontSize: 'var(--fs-xs)', color: 'var(--text-mute)' }}>Capability</th>
-                      <th style={{ textAlign: 'center', padding: '12px', fontSize: 'var(--fs-xs)', color: 'var(--text-mute)' }}>Legacy PMS</th>
                       <th style={{ textAlign: 'center', padding: '12px', fontSize: 'var(--fs-xs)', color: 'var(--accent)', fontWeight: 800 }}>SyncZen Cloud</th>
+                      <th style={{ textAlign: 'center', padding: '12px', fontSize: 'var(--fs-xs)', color: 'var(--text-mute)' }}>Legacy PMS</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1945,10 +1997,10 @@ export default function LandingPage() {
                         style={{ borderBottom: idx < 4 ? '1px solid var(--border)' : 'none' }}
                       >
                         <td style={{ padding: '14px 12px', fontSize: 'var(--fs-sm)', fontWeight: 600 }}>{row.name}</td>
-                        <td style={{ padding: '14px 12px', fontSize: 'var(--fs-sm)', color: 'var(--text-mute)', textAlign: 'center' }}>{row.legacy}</td>
                         <td style={{ padding: '14px 12px', fontSize: 'var(--fs-sm)', color: 'var(--text-pri)', fontWeight: 700, textAlign: 'center' }}>
                           {row.modern}
                         </td>
+                        <td style={{ padding: '14px 12px', fontSize: 'var(--fs-sm)', color: 'var(--text-mute)', textAlign: 'center' }}>{row.legacy}</td>
                       </motion.tr>
                     ))}
                   </tbody>
@@ -1984,16 +2036,16 @@ export default function LandingPage() {
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-md)' }}>
                       <div>
-                        <div style={{ fontSize: '9px', fontWeight: 900, color: 'var(--text-mute)', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '2px' }}>
-                          Legacy PMS
-                        </div>
-                        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-sec)' }}>{row.legacy}</div>
-                      </div>
-                      <div>
                         <div style={{ fontSize: '9px', fontWeight: 900, color: 'var(--accent)', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '2px' }}>
                           SyncZen Cloud
                         </div>
                         <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-pri)', fontWeight: 700 }}>{row.modern}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '9px', fontWeight: 900, color: 'var(--text-mute)', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '2px' }}>
+                          Legacy PMS
+                        </div>
+                        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-sec)' }}>{row.legacy}</div>
                       </div>
                     </div>
                   </motion.div>
@@ -2197,6 +2249,8 @@ export default function LandingPage() {
           </a>
         </div>
       </footer>
-    </div>
+        </div>
+      )}
+    </>
   )
 }
