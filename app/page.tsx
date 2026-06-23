@@ -74,8 +74,9 @@ export default function LandingPage() {
         setIsScrolled(false)
       }
     }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { capture: true, passive: true })
+    handleScroll()
+    return () => window.removeEventListener('scroll', handleScroll, { capture: true })
   }, [])
 
   return (
@@ -741,11 +742,12 @@ export default function LandingPage() {
 
         /* Scroll Snap Slide System */
         @media (min-width: 901px) {
-          html, body {
+          html {
             scroll-snap-type: y mandatory;
             scroll-behavior: smooth;
-            overflow-y: scroll;
-            height: 100%;
+          }
+          body {
+            min-height: 100vh;
           }
           .slide-section {
             height: 100vh;
@@ -785,13 +787,13 @@ export default function LandingPage() {
           padding: var(--sp-md) var(--sp-2xl);
           z-index: 100;
           transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-          background: var(--glass-bg);
+          background: var(--nav-glass-bg);
           backdrop-filter: blur(20px) saturate(180%);
           -webkit-backdrop-filter: blur(20px) saturate(180%);
           border-bottom: 1px solid var(--glass-border);
           border-bottom-left-radius: 20px;
           border-bottom-right-radius: 20px;
-          box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15), 0 2px 10px rgba(99, 102, 241, 0.1); /* blueish glow */
+          box-shadow: 0 10px 35px rgba(59, 130, 246, 0.22), 0 2px 15px rgba(99, 102, 241, 0.15); /* stronger blueish glow */
         }
 
         .landing-nav.scrolled-pill {
@@ -801,7 +803,7 @@ export default function LandingPage() {
           border-radius: var(--r-full);
           padding: 8px var(--sp-xl);
           border: 1px solid var(--border-hi);
-          box-shadow: 0 10px 40px rgba(59, 130, 246, 0.25), 0 4px 20px rgba(99, 102, 241, 0.15); /* blueish glow */
+          box-shadow: 0 12px 45px rgba(59, 130, 246, 0.35), 0 4px 25px rgba(99, 102, 241, 0.22); /* stronger blueish glow */
         }
 
         .nav-links {
@@ -829,6 +831,20 @@ export default function LandingPage() {
           .nav-links {
             display: none; /* Hide link row on small screens */
           }
+        }
+
+        .footer-link {
+          transition: all var(--t-base) !important;
+          border-radius: 6px;
+          padding: 4px 8px;
+          border: 1px solid transparent;
+        }
+        .footer-link:hover {
+          color: var(--accent-hi) !important;
+          background: var(--accent-dim) !important;
+          border-color: var(--accent-glow) !important;
+          box-shadow: 0 0 15px var(--accent-glow) !important;
+          transform: translateY(-1px);
         }
       `}</style>
 
@@ -1865,10 +1881,13 @@ export default function LandingPage() {
           justifyContent: 'center',
           alignItems: 'center',
           padding: '8px 24px',
-          background: 'var(--glass-bg)',
+          background: 'var(--nav-glass-bg)',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderTop: '1px solid var(--glass-border)',
+          borderTopLeftRadius: '20px',
+          borderTopRightRadius: '20px',
+          boxShadow: '0 -10px 35px rgba(59, 130, 246, 0.22), 0 -2px 15px rgba(99, 102, 241, 0.15)',
           zIndex: 99,
           fontSize: '11px',
           color: 'var(--text-sec)',
