@@ -2243,36 +2243,12 @@ export default function LandingPage() {
           </section>
 
           {/* Slide 6: Contact & Support (Premium Support Form) */}
-          <section id="contact-support" className="slide-section" style={{ position: 'relative' }}>
-            {/* Ambient backlight glow */}
+          <section id="contact-support" className="slide-section">
             <motion.div
-              initial={{ opacity: 0, scale: 0.6, rotate: -30 }}
-              whileInView={{ opacity: 0.8, scale: 1.1, rotate: 30 }}
+              initial={{ opacity: 0, y: 80 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.1 }}
-              transition={{ duration: 1.8, type: 'spring', stiffness: 30, damping: 15 }}
-              style={{
-                position: 'absolute',
-                top: '15%',
-                left: '20%',
-                right: '20%',
-                bottom: '15%',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(124, 58, 237, 0.28) 0%, rgba(99, 102, 241, 0.1) 50%, transparent 70%)',
-                filter: 'blur(60px)',
-                zIndex: 0,
-                pointerEvents: 'none',
-              }}
-            />
-
-            <motion.div
-              initial={{ opacity: 0, y: 90, rotate: -3, scale: 0.96 }}
-              whileInView={{ opacity: 1, y: 0, rotate: 0, scale: 1 }}
-              viewport={{ once: false, amount: 0.1 }}
-              transition={{ duration: 1.1, type: 'spring', stiffness: 50, damping: 13 }}
-              whileHover={{ 
-                y: -6, 
-                boxShadow: '0 30px 60px rgba(124, 58, 237, 0.18), 0 0 40px rgba(99, 102, 241, 0.08)'
-              }}
+              transition={{ duration: 0.85, type: 'spring', stiffness: 50, damping: 14 }}
               style={{
                 width: '100%',
                 maxWidth: '600px',
@@ -2285,17 +2261,16 @@ export default function LandingPage() {
                 style={{
                   padding: 'var(--sp-lg)',
                   borderRadius: 'var(--r-xl)',
-                  border: '1px solid rgba(124, 58, 237, 0.18)',
+                  border: '1px solid rgba(124, 58, 237, 0.15)',
                   background: 'linear-gradient(135deg, var(--surface) 0%, rgba(124, 58, 237, 0.03) 100%)',
-                  transition: 'box-shadow var(--t-base), border-color var(--t-base)',
                 }}
               >
                 {/* Centered Header Block */}
                 <motion.div
-                  initial={{ opacity: 0, y: 15, scale: 0.97 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: false, amount: 0.1 }}
-                  transition={{ delay: 0.15, duration: 0.5, type: 'spring', stiffness: 90, damping: 13 }}
+                  transition={{ delay: 0.15, duration: 0.5, type: 'spring', stiffness: 80, damping: 12 }}
                   style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: 'var(--sp-md)' }}
                 >
                   <h2 className="local-promo-title" style={{ marginBottom: '8px' }}>
@@ -2322,10 +2297,10 @@ export default function LandingPage() {
 
                   <motion.div
                     className="input-group"
-                    initial={{ opacity: 0, y: 15, scale: 0.97 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: false, amount: 0.1 }}
-                    transition={{ delay: 0.25, duration: 0.5, type: 'spring', stiffness: 90, damping: 13 }}
+                    transition={{ delay: 0.25, duration: 0.5, type: 'spring', stiffness: 80, damping: 12 }}
                   >
                     <label className="input-label" htmlFor="contact-name">Name</label>
                     <input
@@ -2342,10 +2317,10 @@ export default function LandingPage() {
 
                   <motion.div
                     className="input-group"
-                    initial={{ opacity: 0, y: 15, scale: 0.97 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: false, amount: 0.1 }}
-                    transition={{ delay: 0.35, duration: 0.5, type: 'spring', stiffness: 90, damping: 13 }}
+                    transition={{ delay: 0.35, duration: 0.5, type: 'spring', stiffness: 80, damping: 12 }}
                   >
                     <label className="input-label" htmlFor="contact-email">Email Address</label>
                     <input
@@ -2362,10 +2337,10 @@ export default function LandingPage() {
 
                   <motion.div
                     className="input-group"
-                    initial={{ opacity: 0, y: 15, scale: 0.97 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: false, amount: 0.1 }}
-                    transition={{ delay: 0.45, duration: 0.5, type: 'spring', stiffness: 90, damping: 13 }}
+                    transition={{ delay: 0.45, duration: 0.5, type: 'spring', stiffness: 80, damping: 12 }}
                   >
                     <label className="input-label" htmlFor="contact-message">Message</label>
                     <textarea
@@ -2384,10 +2359,10 @@ export default function LandingPage() {
                     type="submit"
                     className="hero-btn-primary"
                     disabled={isContactSubmitting}
-                    initial={{ opacity: 0, y: 15, scale: 0.97 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: false, amount: 0.1 }}
-                    transition={{ delay: 0.55, duration: 0.5, type: 'spring', stiffness: 90, damping: 13 }}
+                    transition={{ delay: 0.55, duration: 0.5, type: 'spring', stiffness: 80, damping: 12 }}
                     style={{
                       width: '100%',
                       marginTop: 'var(--sp-xs)',
